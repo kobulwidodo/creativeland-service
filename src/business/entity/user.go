@@ -12,6 +12,7 @@ type User struct {
 	Password string `json:"-"`
 	Nama     string
 	IsAdmin  bool
+	GuestID  string `json:"-" gorm:"-:migration"`
 }
 
 type CreateUserParam struct {
@@ -31,5 +32,6 @@ func (u *User) ConvertToAuthUser() auth.User {
 		Username: u.Username,
 		Password: u.Password,
 		IsAdmin:  u.IsAdmin,
+		GuestID:  u.GuestID,
 	}
 }

@@ -12,6 +12,7 @@ import (
 type Interface interface {
 	Create(params entity.CreateUserParam) (entity.User, error)
 	Login(params entity.LoginUserParam) (string, error)
+	GenerateGuestToken() (string, error)
 	GetById(id uint) (entity.User, error)
 }
 
@@ -74,6 +75,15 @@ func (a *user) Login(params entity.LoginUserParam) (string, error) {
 	}
 
 	token, err := a.auth.GenerateToken(user.ConvertToAuthUser())
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (a *user) GenerateGuestToken() (string, error) {
+	token, err := a.auth.GenerateGuestToken()
 	if err != nil {
 		return "", err
 	}

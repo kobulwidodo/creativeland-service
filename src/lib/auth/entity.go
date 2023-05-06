@@ -7,7 +7,7 @@ type UserAuthInfo struct {
 
 type User struct {
 	ID       uint
-	GuestId  string
+	GuestID  string
 	Username string
 	Password string
 	Nama     string

@@ -60,3 +60,23 @@ func (r *rest) LoginUser(ctx *gin.Context) {
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully login", gin.H{"token": token})
 }
+
+// @Summary Guest User
+// @Description Guest User
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/auth/guest [POST]
+func (r *rest) LoginGuestUser(ctx *gin.Context) {
+	token, err := r.uc.User.GenerateGuestToken()
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully get guest token", token)
+}

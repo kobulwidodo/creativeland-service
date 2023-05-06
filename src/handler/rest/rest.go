@@ -47,7 +47,7 @@ func Init(conf config.GinConfig, confReader configreader.Interface, uc *usecase.
 			gin.SetMode("")
 		}
 
-		httpServ := gin.Default()
+		httpServ := gin.New()
 
 		r = &rest{
 			conf:         conf,
@@ -77,6 +77,8 @@ func Init(conf config.GinConfig, confReader configreader.Interface, uc *usecase.
 
 		// Set Recovery
 		r.http.Use(gin.Recovery())
+
+		r.http.Use(gin.Logger())
 
 		r.Register()
 	})
@@ -145,6 +147,33 @@ func (r *rest) Register() {
 	auth := v1.Group("/auth")
 	auth.POST("/register", r.RegisterUser)
 	auth.POST("/login", r.LoginUser)
+	auth.POST("/guest", r.LoginGuestUser)
+
+	umkm := v1.Group("/umkm")
+	umkm.POST("/create", r.VerifyUser, r.VerifyAdmin, r.CreateUmkm)
+	umkm.GET("/:umkm_id", r.VerifyUser, r.GetUmkmByID)
+	umkm.GET("", r.VerifyUser, r.GetUmkmList)
+	umkm.PUT("/:umkm_id", r.VerifyUser, r.VerifyAdmin, r.UpdateUmkm)
+	umkm.DELETE("/:umkm_id", r.VerifyUser, r.VerifyAdmin, r.DeleteUmkm)
+
+	menu := v1.Group("/menu")
+	menu.POST("/create", r.VerifyUser, r.VerifyAdmin, r.CreateMenu)
+	menu.GET("/:menu_id", r.VerifyUser, r.GetMenuByID)
+	menu.GET("", r.VerifyUser, r.GetMenuList)
+	menu.PUT("/:menu_id", r.VerifyUser, r.VerifyAdmin, r.UpdateMenu)
+	menu.DELETE("/:menu_id", r.VerifyUser, r.VerifyAdmin, r.DeleteMenu)
+
+	cart := v1.Group("/cart")
+	cart.POST("/create", r.VerifyUser, r.AddMenuToCart)
+	cart.GET("", r.VerifyUser, r.GetListCartByUser)
+	cart.DELETE("/:cart_id", r.VerifyUser, r.VerifyCart, r.DeleteItemCart)
+
+	transaction := v1.Group("/transaction")
+	transaction.POST("/create", r.VerifyUser, r.CreateOrder)
+	transaction.GET("/:transaction_id/payment-detail", r.VerifyUser, r.GetPaymentDetail)
+
+	midtransTransaction := v1.Group("/midtrans-transaction")
+	midtransTransaction.POST("/handle", r.HandleNotification)
 }
 
 func (r *rest) registerSwaggerRoutes() {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go-clean/src/business/entity"
+	"log"
 	"net/http"
 	"os"
 
@@ -32,6 +33,7 @@ func (r *rest) httpRespError(ctx *gin.Context, code int, err error) {
 		},
 		Data: nil,
 	}
+	log.Default().Println(err)
 	ctx.AbortWithStatusJSON(code, resp)
 }
 
@@ -61,16 +63,59 @@ func (r *rest) VerifyUser(ctx *gin.Context) {
 		return
 	}
 
+	c := ctx.Request.Context()
 	user := entity.User{}
-	user, err = r.uc.User.GetById(uint(claim["id"].(float64)))
+
+	if claim["is_guest"].(bool) {
+		user = entity.User{
+			GuestID: claim["guest_id"].(string),
+		}
+	} else {
+		user, err = r.uc.User.GetById(uint(claim["id"].(float64)))
+		if err != nil {
+			r.httpRespError(ctx, http.StatusUnauthorized, errors.New("error while getting user"))
+			return
+		}
+	}
+
+	c = r.auth.SetUserAuthInfo(c, user.ConvertToAuthUser(), tokenString)
+	ctx.Request = ctx.Request.WithContext(c)
+
+	ctx.Next()
+}
+
+func (r *rest) VerifyAdmin(ctx *gin.Context) {
+	user, err := r.auth.GetUserAuthInfo(ctx.Request.Context())
 	if err != nil {
-		r.httpRespError(ctx, http.StatusUnauthorized, errors.New("error while getting user"))
+		r.httpRespError(ctx, http.StatusUnauthorized, err)
 		return
 	}
 
-	c := ctx.Request.Context()
-	c = r.auth.SetUserAuthInfo(c, user.ConvertToAuthUser(), tokenString)
-	ctx.Request = ctx.Request.WithContext(c)
+	if !user.User.IsAdmin {
+		r.httpRespError(ctx, http.StatusUnauthorized, errors.New("dont have access"))
+		return
+	}
+
+	ctx.Next()
+}
+
+func (r *rest) VerifyCart(ctx *gin.Context) {
+	user, err := r.auth.GetUserAuthInfo(ctx.Request.Context())
+	if err != nil {
+		r.httpRespError(ctx, http.StatusUnauthorized, err)
+		return
+	}
+
+	var selectParam entity.CartParam
+	if err := ctx.ShouldBindUri(&selectParam); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	if err := r.uc.Cart.ValidateCart(ctx, selectParam.ID, user.User.GuestID); err != nil {
+		r.httpRespError(ctx, http.StatusUnauthorized, err)
+		return
+	}
 
 	ctx.Next()
 }
