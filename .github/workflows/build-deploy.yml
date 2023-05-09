@@ -33,7 +33,13 @@ jobs:
           MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >./etc/cfg/.env
           echo "ini isi env nya pak"
           cat ./etc/cfg/.env
-          cd etc/cfg
+          echo "ls isi project"
+          ls
+          echo "ls isi etc"
+          cd .etc/
+          ls
+          echo "ls isi cfg"
+          cd cfg/
           ls
 
       - name: Prepare Environment
