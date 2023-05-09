@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go-clean/src/business/domain"
 	"go-clean/src/business/usecase"
 	"go-clean/src/handler/rest"
@@ -39,6 +40,8 @@ func main() {
 
 	// init midtrans config
 	configReader.ReadConfig(&cfg.Midtrans)
+
+	fmt.Printf("%#v", cfg)
 
 	auth := auth.Init()
 
