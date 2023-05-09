@@ -17,22 +17,22 @@ jobs:
         with:
           go-version: 1.18
 
-       - name: Initialize the environment variables
-        run: |
-          echo "running .env file"
-          echo "META_TITLE=Creative Land Service
-          META_DESCRIPTION=This is Creative Land Service
-          META_HOST=13.215.50.57:8080
-          META_BASEPATH=/
-          META_VERSION=
+      - name: Initialize the environment variables
+      run: |
+        echo "running .env file"
+        echo "META_TITLE=Creative Land Service
+        META_DESCRIPTION=This is Creative Land Service
+        META_HOST=13.215.50.57:8080
+        META_BASEPATH=/
+        META_VERSION=
 
-          SQL_HOST=${{ secrets.SQL_HOST }}
-          SQL_USERNAME=${{ secrets.SQL_USERNAME }}
-          SQL_PASSWORD=${{ secrets.SQL_PASSWORD }}
-          SQL_PORT=${{ secrets.SQL_PORT }}
-          SQL_DATABASE=${{ secrets.SQL_DATABASE }}
+        SQL_HOST=${{ secrets.SQL_HOST }}
+        SQL_USERNAME=${{ secrets.SQL_USERNAME }}
+        SQL_PASSWORD=${{ secrets.SQL_PASSWORD }}
+        SQL_PORT=${{ secrets.SQL_PORT }}
+        SQL_DATABASE=${{ secrets.SQL_DATABASE }}
 
-          MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >./etc/cfg/.env
+        MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >./etc/cfg/.env
 
       - name: Build
         run: go build -v ./...
