@@ -30,9 +30,9 @@ jobs:
           SQL_PASSWORD=${{ secrets.SQL_PASSWORD }}
           SQL_PORT=${{ secrets.SQL_PORT }}
           SQL_DATABASE=${{ secrets.SQL_DATABASE }}
-          MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >/etc/cfg/.env
+          MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >./etc/cfg/.env
           echo "ini isi env nya pak"
-          cat /etc/cfg/.env
+          cat ./etc/cfg/.env
           echo "ls isi project"
           ls
           echo "ls isi etc"
