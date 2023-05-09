@@ -31,6 +31,8 @@ jobs:
           SQL_PORT=${{ secrets.SQL_PORT }}
           SQL_DATABASE=${{ secrets.SQL_DATABASE }}
           MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >./etc/cfg/.env
+          cat ./etc/cfg/.env
+          ls
 
       - name: Prepare Environment
         run: |
