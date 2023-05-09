@@ -22,7 +22,7 @@ type configReader struct {
 func Init(opt Options) Interface {
 	v := viper.New()
 	v.SetConfigFile(opt.ConfigFile)
-	v.SetConfigType("json")
+	v.SetConfigType("env")
 	if err := v.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("fatal error found during reading file. err : %w", err))
 	}

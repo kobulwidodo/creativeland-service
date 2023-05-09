@@ -9,11 +9,11 @@ import (
 )
 
 type Config struct {
-	Host     string
-	Username string
-	Password string
-	Port     string
-	Database string
+	Host     string `mapstructure:"SQL_HOST"`
+	Username string `mapstructure:"SQL_USERNAME"`
+	Password string `mapstructure:"SQL_PASSWORD"`
+	Port     string `mapstructure:"SQL_PORT"`
+	Database string `mapstructure:"SQL_DATABASE"`
 }
 
 func Init(cfg Config) *gorm.DB {

@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -29,25 +30,16 @@ type REST interface {
 
 type rest struct {
 	http         *gin.Engine
-	conf         config.GinConfig
+	conf         config.ApplicationMeta
 	configreader configreader.Interface
 	uc           *usecase.Usecase
 	auth         auth.Interface
 }
 
-func Init(conf config.GinConfig, confReader configreader.Interface, uc *usecase.Usecase, auth auth.Interface) REST {
+func Init(conf config.ApplicationMeta, confReader configreader.Interface, uc *usecase.Usecase, auth auth.Interface) REST {
 	r := &rest{}
 	once.Do(func() {
-		switch conf.Mode {
-		case gin.ReleaseMode:
-			gin.SetMode(gin.ReleaseMode)
-		case gin.DebugMode, gin.TestMode:
-			gin.SetMode(gin.TestMode)
-		default:
-			gin.SetMode("")
-		}
-
-		httpServ := gin.New()
+		httpServ := gin.Default()
 
 		r = &rest{
 			conf:         conf,
@@ -57,23 +49,18 @@ func Init(conf config.GinConfig, confReader configreader.Interface, uc *usecase.
 			auth:         auth,
 		}
 
-		switch r.conf.CORS.Mode {
-		case "allowall":
-			r.http.Use(cors.New(cors.Config{
-				AllowAllOrigins: true,
-				AllowHeaders:    []string{"*"},
-				AllowMethods: []string{
-					http.MethodHead,
-					http.MethodGet,
-					http.MethodPost,
-					http.MethodPut,
-					http.MethodPatch,
-					http.MethodDelete,
-				},
-			}))
-		default:
-			r.http.Use(cors.New(cors.DefaultConfig()))
-		}
+		r.http.Use(cors.New(cors.Config{
+			AllowAllOrigins: true,
+			AllowHeaders:    []string{"*"},
+			AllowMethods: []string{
+				http.MethodHead,
+				http.MethodGet,
+				http.MethodPost,
+				http.MethodPut,
+				http.MethodPatch,
+				http.MethodDelete,
+			},
+		}))
 
 		// Set Recovery
 		r.http.Use(gin.Recovery())
@@ -88,9 +75,6 @@ func Init(conf config.GinConfig, confReader configreader.Interface, uc *usecase.
 
 func (r *rest) Run() {
 	port := ":8080"
-	if r.conf.Port != "" {
-		port = fmt.Sprintf(":%s", r.conf.Port)
-	}
 
 	server := &http.Server{
 		Addr:    port,
@@ -116,7 +100,7 @@ func (r *rest) Run() {
 
 	// The context is used to inform the server it has 5 seconds to finish
 	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), r.conf.ShutdownTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
@@ -177,11 +161,11 @@ func (r *rest) Register() {
 }
 
 func (r *rest) registerSwaggerRoutes() {
-	swagger.SwaggerInfo.Title = r.conf.Meta.Title
-	swagger.SwaggerInfo.Description = r.conf.Meta.Description
-	swagger.SwaggerInfo.Version = r.conf.Meta.Version
-	swagger.SwaggerInfo.Host = r.conf.Meta.Host
-	swagger.SwaggerInfo.BasePath = r.conf.Meta.BasePath
+	swagger.SwaggerInfo.Title = r.conf.Title
+	swagger.SwaggerInfo.Description = r.conf.Description
+	swagger.SwaggerInfo.Version = r.conf.Version
+	swagger.SwaggerInfo.Host = r.conf.Host
+	swagger.SwaggerInfo.BasePath = r.conf.BasePath
 
 	r.http.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }

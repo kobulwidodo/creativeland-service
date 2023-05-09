@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go-clean/src/business/domain"
 	"go-clean/src/business/usecase"
 	"go-clean/src/handler/rest"
@@ -22,7 +23,7 @@ import (
 // @name Authorization
 
 const (
-	configFile string = "./etc/cfg/config.json"
+	configFile string = "./etc/cfg/.env"
 )
 
 func main() {
@@ -30,7 +31,17 @@ func main() {
 	configReader := configreader.Init(configreader.Options{
 		ConfigFile: configFile,
 	})
-	configReader.ReadConfig(&cfg)
+
+	// init meta config
+	configReader.ReadConfig(&cfg.Meta)
+
+	// init sql config
+	configReader.ReadConfig(&cfg.SQL)
+
+	// init midtrans config
+	configReader.ReadConfig(&cfg.Midtrans)
+
+	fmt.Printf("%#v", cfg)
 
 	auth := auth.Init()
 
@@ -42,7 +53,7 @@ func main() {
 
 	uc := usecase.Init(auth, d)
 
-	r := rest.Init(cfg.Gin, configReader, uc, auth)
+	r := rest.Init(cfg.Meta, configReader, uc, auth)
 
 	r.Run()
 }
