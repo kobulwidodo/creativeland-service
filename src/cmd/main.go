@@ -23,7 +23,7 @@ import (
 // @name Authorization
 
 const (
-	configFile string = "./etc/cfg/.env"
+	configFile string = "./etc/cfg/app.env"
 )
 
 func main() {
