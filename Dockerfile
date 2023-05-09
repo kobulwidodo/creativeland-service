@@ -6,6 +6,10 @@ WORKDIR /app
 
 COPY . .
 
+RUN ls
+
+RUN ls ./etc/
+
 RUN ls ./etc/cfg/
 
 # install swagg
