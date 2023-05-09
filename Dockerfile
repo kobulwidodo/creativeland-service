@@ -6,6 +6,16 @@ WORKDIR /app
 
 COPY . .
 
+RUN cd ./etc/
+
+RUN ls
+
+RUN cd cfg/
+
+RUN ls
+
+RUN ../../
+
 # install swagg
 RUN go install github.com/swaggo/swag/cmd/swag@v1.6.7
 
