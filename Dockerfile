@@ -6,12 +6,6 @@ WORKDIR /app
 
 COPY . .
 
-RUN ls
-
-RUN ls ./etc/
-
-RUN ls ./etc/cfg/
-
 # install swagg
 RUN go install github.com/swaggo/swag/cmd/swag@v1.6.7
 
@@ -20,6 +14,15 @@ RUN `go env GOPATH`/bin/swag init -g src/cmd/main.go -o docs/swagger --parseInte
 
 #download library or package 
 RUN go mod download
+
+COPY ./etc/cfg/app.env .
+
+
+RUN ls
+
+RUN ls ./etc/
+
+RUN ls ./etc/cfg/
 
 RUN go build -o binary ./src/cmd
 
