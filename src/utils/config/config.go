@@ -3,35 +3,20 @@ package config
 import (
 	"go-clean/src/lib/midtrans"
 	"go-clean/src/lib/sql"
-	"time"
 )
 
 type Application struct {
 	Meta     ApplicationMeta
-	Gin      GinConfig
 	SQL      sql.Config
 	Midtrans midtrans.Config
 }
 
 type ApplicationMeta struct {
-	Title       string
-	Description string
-	Host        string
-	BasePath    string
-	Version     string
-}
-
-type GinConfig struct {
-	Port            string
-	Mode            string
-	Timeout         time.Duration
-	ShutdownTimeout time.Duration
-	CORS            CORSConfig
-	Meta            ApplicationMeta
-}
-
-type CORSConfig struct {
-	Mode string
+	Title       string `mapstructure:"META_TITLE"`
+	Description string `mapstructure:"META_DESCRIPTION"`
+	Host        string `mapstructure:"META_HOST"`
+	BasePath    string `mapstructure:"META_BASEPATH"`
+	Version     string `mapstructure:"META_VERSION"`
 }
 
 func Init() Application {
