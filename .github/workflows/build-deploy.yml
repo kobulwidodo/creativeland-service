@@ -10,54 +10,54 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
 
-      - name: Initialize the environment variables
-      run: |
-        echo "running .env file"
-        echo "META_TITLE=Creative Land Service
-        META_DESCRIPTION=This is Creative Land Service
-        META_HOST=13.215.50.57:8080
-        META_BASEPATH=/
-        META_VERSION=
+    - name: Initialize the environment variables
+    run: |
+      echo "running .env file"
+      echo "META_TITLE=Creative Land Service
+      META_DESCRIPTION=This is Creative Land Service
+      META_HOST=13.215.50.57:8080
+      META_BASEPATH=/
+      META_VERSION=
 
-        SQL_HOST=${{ secrets.SQL_HOST }}
-        SQL_USERNAME=${{ secrets.SQL_USERNAME }}
-        SQL_PASSWORD=${{ secrets.SQL_PASSWORD }}
-        SQL_PORT=${{ secrets.SQL_PORT }}
-        SQL_DATABASE=${{ secrets.SQL_DATABASE }}
+      SQL_HOST=${{ secrets.SQL_HOST }}
+      SQL_USERNAME=${{ secrets.SQL_USERNAME }}
+      SQL_PASSWORD=${{ secrets.SQL_PASSWORD }}
+      SQL_PORT=${{ secrets.SQL_PORT }}
+      SQL_DATABASE=${{ secrets.SQL_DATABASE }}
 
-        MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >./etc/cfg/.env
+      MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >./etc/cfg/.env
 
-      - name: Build
-        run: go build -v ./...
+    - name: Build
+      run: go build -v ./...
 
-      - name: Test
-        run: go test -v ./...
+    - name: Test
+      run: go test -v ./...
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          push: true
-          tags: kobulwidodo/cl-api:latest
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Build and push
+      uses: docker/build-push-action@v3
+      with:
+        push: true
+        tags: kobulwidodo/cl-api:latest
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_AWS }}
-          username: ${{ secrets.USERNAME_AWS }}
-          key: ${{ secrets.KEY_AWS }}
-          script: |
-            sudo docker pull kobulwidodo/cl-api:latest
-            sudo docker container create --name go-app-cl -p 8080:8080 kobulwidodo/cl-api:latest
-            sudo docker container start go-app-cl
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST_AWS }}
+        username: ${{ secrets.USERNAME_AWS }}
+        key: ${{ secrets.KEY_AWS }}
+        script: |
+          sudo docker pull kobulwidodo/cl-api:latest
+          sudo docker container create --name go-app-cl -p 8080:8080 kobulwidodo/cl-api:latest
+          sudo docker container start go-app-cl
