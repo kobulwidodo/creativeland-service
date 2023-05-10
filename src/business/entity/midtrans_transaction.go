@@ -1,6 +1,10 @@
 package entity
 
-import "gorm.io/gorm"
+import (
+	"go-clean/src/lib/midtrans"
+
+	"gorm.io/gorm"
+)
 
 type MidtransTransaction struct {
 	gorm.Model
@@ -30,4 +34,15 @@ type MidtransTransactionPaymentDetail struct {
 
 type UpdateMidtransTransactionParam struct {
 	Status string `json:"string"`
+}
+
+func (mt *MidtransTransaction) GetPaymentType() string {
+	result := ""
+
+	switch mt.PaymentType {
+	case midtrans.GopayPayment:
+		result = "Gopay"
+	}
+
+	return result
 }

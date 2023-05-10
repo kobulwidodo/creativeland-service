@@ -22,9 +22,10 @@ type Cart struct {
 }
 
 type CartParam struct {
-	ID      uint `uri:"cart_id" json:"id"`
-	Status  string
-	GuestID string
+	ID            uint `uri:"cart_id" json:"id"`
+	TransactionID uint
+	Status        string
+	GuestID       string
 }
 
 type CreateCartParam struct {

@@ -19,6 +19,7 @@ import (
 
 type Interface interface {
 	Crete(ctx context.Context, param entity.CreateTransactionParam) (uint, error)
+	GetOrderDetail(ctx context.Context, param entity.TransactionParam) (entity.TransactionDetailResponse, error)
 }
 
 type transaction struct {
@@ -167,4 +168,63 @@ func (t *transaction) convertToItemsDetails(carts []entity.Cart, menus map[uint]
 	}
 
 	return res
+}
+
+func (t *transaction) GetOrderDetail(ctx context.Context, param entity.TransactionParam) (entity.TransactionDetailResponse, error) {
+	result := entity.TransactionDetailResponse{}
+
+	transaction, err := t.transaction.Get(param)
+	if err != nil {
+		return result, err
+	}
+
+	midtransTransaction, err := t.midtransTransaction.Get(entity.MidtransTransactionParam{
+		TransactionID: transaction.ID,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	carts, err := t.cart.GetList(entity.CartParam{
+		TransactionID: transaction.ID,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	menusID := []int64{}
+	for _, c := range carts {
+		menusID = append(menusID, int64(c.MenuID))
+	}
+
+	menus, err := t.menu.GetListInByID(menusID)
+	if err != nil {
+		return result, err
+	}
+
+	menuMap := make(map[uint]entity.Menu)
+	for _, m := range menus {
+		menuMap[m.ID] = m
+	}
+
+	result.ID = transaction.ID
+	result.BuyerName = transaction.BuyerName
+	result.Seat = transaction.Seat
+	result.Notes = transaction.Notes
+	result.Price = transaction.Price
+	result.Status = midtransTransaction.Status
+	result.PaymentType = midtransTransaction.GetPaymentType()
+	result.ItemMenus = []entity.ItemMenu{}
+
+	for _, c := range carts {
+		itemMenu := entity.ItemMenu{
+			Name:         menuMap[c.MenuID].Name,
+			Price:        c.TotalPrice,
+			Qty:          c.Amount,
+			PricePerItem: c.PricePerItem,
+		}
+		result.ItemMenus = append(result.ItemMenus, itemMenu)
+	}
+
+	return result, nil
 }

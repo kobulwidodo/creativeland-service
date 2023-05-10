@@ -34,3 +34,31 @@ func (r *rest) CreateOrder(ctx *gin.Context) {
 
 	r.httpRespSuccess(ctx, http.StatusCreated, "successfully created new order", id)
 }
+
+// @Summary Get Order
+// @Description Get Detail Order
+// @Security BearerAuth
+// @Tags Transaction
+// @Param transaction_id path integer true "transaction id"
+// @Produce json
+// @Success 200 {object} entity.Response{data=entity.TransactionDetailResponse}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/transaction/{transaction_id} [GET]
+func (r *rest) GetOrderDetail(ctx *gin.Context) {
+	var param entity.TransactionParam
+	if err := ctx.ShouldBindUri(&param); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	result, err := r.uc.Transaction.GetOrderDetail(ctx.Request.Context(), param)
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully get order detail", result)
+}
