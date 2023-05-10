@@ -31,16 +31,6 @@ jobs:
           SQL_PORT=${{ secrets.SQL_PORT }}
           SQL_DATABASE=${{ secrets.SQL_DATABASE }}
           MIDTRANS_SERVERKEY=${{ secrets.MIDTRANS_SERVERKEY }}" >./etc/cfg/app.env
-          echo "ini isi env nya pak"
-          cat ./etc/cfg/app.env
-          echo "ls isi project"
-          ls
-          echo "ls isi etc"
-          cd etc/
-          ls
-          echo "ls isi cfg"
-          cd cfg/
-          ls
 
       - name: Prepare Environment
         run: |
