@@ -36,9 +36,8 @@ jobs:
           username: ${{ secrets.USERNAME_AWS }}
           key: ${{ secrets.KEY_AWS }}
           script: |
-            sudo docker container stop go-app
-            sudo docker container rm go-app
-            sudo docker image rm cl-app
+            cd creativeland-service
+            git pull
             sudo docker build -t cl-app .
             sudo docker container create --name go-app -p 8080:8080 go-app
             sudo docker container start go-app
