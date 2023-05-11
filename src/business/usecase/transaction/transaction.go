@@ -64,7 +64,7 @@ func (t *transaction) Crete(ctx context.Context, param entity.CreateTransactionP
 
 	menuIDs := []int64{}
 	for _, c := range carts {
-		menuIDs = append(menuIDs, int64(c.ID))
+		menuIDs = append(menuIDs, int64(c.MenuID))
 	}
 
 	menus, err := t.menu.GetListInByID(menuIDs)
@@ -72,9 +72,9 @@ func (t *transaction) Crete(ctx context.Context, param entity.CreateTransactionP
 		return 0, err
 	}
 
-	menusMap := make(map[uint]entity.Menu)
+	menusMap := make(map[int]entity.Menu)
 	for _, m := range menus {
-		menusMap[m.ID] = m
+		menusMap[int(m.ID)] = m
 	}
 
 	grossAmount := 0
@@ -155,14 +155,14 @@ func (t *transaction) getPaymentData(paymentId int, coreApiRes *coreapi.ChargeRe
 	return paymentData, nil
 }
 
-func (t *transaction) convertToItemsDetails(carts []entity.Cart, menus map[uint]entity.Menu) []midtrans.ItemsDetails {
+func (t *transaction) convertToItemsDetails(carts []entity.Cart, menus map[int]entity.Menu) []midtrans.ItemsDetails {
 	res := []midtrans.ItemsDetails{}
 	for _, c := range carts {
 		resTemp := midtrans.ItemsDetails{
 			ID:    strconv.Itoa(int(c.ID)),
 			Price: int64(c.PricePerItem),
 			Qty:   c.Amount,
-			Name:  menus[c.MenuID].Name,
+			Name:  menus[int(c.MenuID)].Name,
 		}
 		res = append(res, resTemp)
 	}

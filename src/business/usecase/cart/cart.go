@@ -39,7 +39,8 @@ func (c *cart) Create(ctx context.Context, params entity.CreateCartParam) (entit
 	}
 
 	menu, err := c.menu.Get(entity.MenuParam{
-		ID: params.MenuID,
+		ID:     params.MenuID,
+		UmkmID: params.UmkmID,
 	})
 	if err != nil {
 		return entity.Cart{}, err
