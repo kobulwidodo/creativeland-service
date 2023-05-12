@@ -26,11 +26,11 @@ Run this command line to export to your environment :
 source .env
 ```
 
-Run this command to duplicate config file then you must fill `config.json` :
+Run this command to duplicate config file then you must fill `app.env` :
 
 ```shell
 cd etc/cfg
-cp config.json.template config.json
+cp .env.example app.env
 ```
 
 Run this command line to create database using docker compose :
