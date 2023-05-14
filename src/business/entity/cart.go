@@ -5,8 +5,10 @@ import (
 )
 
 const (
-	StatusActive   = "active"
-	StatusInactive = "inactive"
+	StatusInCart = "in_cart"
+	StatusUnpaid = "unpaid"
+	StatusPaid   = "paid"
+	StatusDone   = "done"
 )
 
 type Cart struct {
@@ -25,6 +27,7 @@ type CartParam struct {
 	ID            uint `uri:"cart_id" json:"id"`
 	TransactionID uint
 	Status        string
+	UmkmID        uint
 	GuestID       string
 }
 

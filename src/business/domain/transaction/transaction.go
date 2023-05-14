@@ -9,6 +9,7 @@ import (
 type Interface interface {
 	Create(transaction entity.Transaction) (entity.Transaction, error)
 	Get(param entity.TransactionParam) (entity.Transaction, error)
+	GetListByIDs(ids []uint) ([]entity.Transaction, error)
 }
 
 type transaction struct {
@@ -39,4 +40,14 @@ func (t *transaction) Get(param entity.TransactionParam) (entity.Transaction, er
 	}
 
 	return transaction, nil
+}
+
+func (t *transaction) GetListByIDs(ids []uint) ([]entity.Transaction, error) {
+	transactions := []entity.Transaction{}
+
+	if err := t.db.Where(ids).Find(&transactions).Error; err != nil {
+		return transactions, err
+	}
+
+	return transactions, nil
 }

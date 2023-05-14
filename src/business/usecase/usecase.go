@@ -27,7 +27,7 @@ func Init(auth auth.Interface, d *domain.Domains) *Usecase {
 		Menu:                menu.Init(d.Menu),
 		Cart:                cart.Init(d.Cart, auth, d.Menu),
 		Transaction:         transaction.Init(auth, d.Transaction, d.Cart, d.Menu, d.Midtrans, d.MidtransTransaction),
-		MidtransTransaction: midtranstransaction.Init(d.MidtransTransaction, d.Midtrans),
+		MidtransTransaction: midtranstransaction.Init(d.MidtransTransaction, d.Midtrans, d.Cart),
 	}
 
 	return uc

@@ -51,7 +51,7 @@ func (c *cart) Create(ctx context.Context, params entity.CreateCartParam) (entit
 		MenuID:       params.MenuID,
 		GuestID:      user.User.GuestID,
 		Amount:       params.Amount,
-		Status:       entity.StatusActive,
+		Status:       entity.StatusInCart,
 		TotalPrice:   params.Amount * menu.Price,
 		PricePerItem: menu.Price,
 	})
@@ -70,7 +70,7 @@ func (c *cart) GetListByUser(ctx context.Context) ([]entity.Cart, error) {
 
 	cart, err := c.cart.GetList(entity.CartParam{
 		GuestID: user.User.GuestID,
-		Status:  entity.StatusActive,
+		Status:  entity.StatusInCart,
 	})
 	if err != nil {
 		return cart, err

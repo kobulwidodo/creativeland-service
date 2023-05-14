@@ -12,4 +12,5 @@ type User struct {
 	Password string
 	Nama     string
 	IsAdmin  bool
+	UmkmID   uint
 }

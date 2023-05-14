@@ -6,6 +6,14 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	StatusChallange = "challange"
+	StatusSuccess   = "success"
+	StatusDeny      = "deny"
+	StatusFailure   = "failure"
+	StatusPending   = "pending"
+)
+
 type MidtransTransaction struct {
 	gorm.Model
 	TransactionID uint

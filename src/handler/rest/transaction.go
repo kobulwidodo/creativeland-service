@@ -62,3 +62,37 @@ func (r *rest) GetOrderDetail(ctx *gin.Context) {
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully get order detail", result)
 }
+
+// @Summary Get Transaction List
+// @Description Get Transaction List by UMKM ID
+// @Security BearerAuth
+// @Tags Transaction
+// @Param umkm_id path integer true "umkm id"
+// @Param status query string false "status" Enums(in_cart, unpaid, paid, done)
+// @Produce json
+// @Success 200 {object} entity.Response{data=entity.TransactionDetailResponse}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/umkm/{umkm_id}/transactions [GET]
+func (r *rest) GetTransactionListUmkm(ctx *gin.Context) {
+	var param entity.TransactionParam
+	if err := ctx.ShouldBindUri(&param); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	if err := ctx.ShouldBindQuery(&param); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	result, err := r.uc.Transaction.GetTransactionListByUmkm(ctx.Request.Context(), param)
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully get transactions list", result)
+}

@@ -20,6 +20,7 @@ import (
 type Interface interface {
 	Crete(ctx context.Context, param entity.CreateTransactionParam) (uint, error)
 	GetOrderDetail(ctx context.Context, param entity.TransactionParam) (entity.TransactionDetailResponse, error)
+	GetTransactionListByUmkm(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error)
 }
 
 type transaction struct {
@@ -51,7 +52,7 @@ func (t *transaction) Crete(ctx context.Context, param entity.CreateTransactionP
 	}
 
 	carts, err := t.cart.GetList(entity.CartParam{
-		Status:  entity.StatusActive,
+		Status:  entity.StatusInCart,
 		GuestID: user.User.GuestID,
 	})
 	if err != nil {
@@ -118,10 +119,10 @@ func (t *transaction) Crete(ctx context.Context, param entity.CreateTransactionP
 	}
 
 	if err := t.cart.Update(entity.CartParam{
-		Status:  entity.StatusActive,
+		Status:  entity.StatusInCart,
 		GuestID: user.User.GuestID,
 	}, entity.UpdateCartParam{
-		Status:        entity.StatusInactive,
+		Status:        entity.StatusUnpaid,
 		TransactionID: transaction.ID,
 	}); err != nil {
 		return 0, err
@@ -224,6 +225,74 @@ func (t *transaction) GetOrderDetail(ctx context.Context, param entity.Transacti
 			PricePerItem: c.PricePerItem,
 		}
 		result.ItemMenus = append(result.ItemMenus, itemMenu)
+	}
+
+	return result, nil
+}
+
+func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error) {
+	result := []entity.TransactionDetailResponse{}
+
+	carts, err := t.cart.GetList(entity.CartParam{
+		UmkmID: param.UmkmID,
+		Status: param.Status,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	if len(carts) == 0 {
+		return result, nil
+	}
+
+	cartsMap := make(map[uint][]entity.Cart)
+	for _, c := range carts {
+		cartsMap[c.TransactionID] = append(cartsMap[c.TransactionID], c)
+	}
+
+	menus, err := t.menu.GetAll(entity.MenuParam{
+		UmkmID: param.UmkmID,
+	})
+	if err != nil {
+		return result, err
+	}
+	menusMap := make(map[uint]entity.Menu)
+	for _, m := range menus {
+		menusMap[m.ID] = m
+	}
+
+	transactionIDs := []uint{}
+	for k := range cartsMap {
+		transactionIDs = append(transactionIDs, k)
+	}
+
+	transactions, err := t.transaction.GetListByIDs(transactionIDs)
+	if err != nil {
+		return result, err
+	}
+
+	for _, t := range transactions {
+		transactionDetail := entity.TransactionDetailResponse{
+			ID:        t.ID,
+			BuyerName: t.BuyerName,
+			Seat:      t.Seat,
+			Notes:     t.Notes,
+			Price:     t.Price,
+			Status:    cartsMap[t.ID][0].Status,
+		}
+		itemMenus := []entity.ItemMenu{}
+		for _, cm := range cartsMap[t.ID] {
+			itemMenus = append(itemMenus, entity.ItemMenu{
+				UmkmID:       cm.UmkmID,
+				MenuID:       cm.MenuID,
+				Name:         menusMap[cm.MenuID].Name,
+				Price:        cm.TotalPrice,
+				Qty:          cm.Amount,
+				PricePerItem: cm.PricePerItem,
+			})
+		}
+		transactionDetail.ItemMenus = itemMenus
+		result = append(result, transactionDetail)
 	}
 
 	return result, nil

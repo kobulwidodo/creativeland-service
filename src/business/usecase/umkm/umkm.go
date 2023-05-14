@@ -1,8 +1,11 @@
 package umkm
 
 import (
+	"context"
+	"errors"
 	umkmDom "go-clean/src/business/domain/umkm"
 	"go-clean/src/business/entity"
+	"go-clean/src/lib/auth"
 )
 
 type Interface interface {
@@ -11,6 +14,7 @@ type Interface interface {
 	GetById(params entity.UmkmParam) (entity.Umkm, error)
 	Update(param entity.UmkmParam, inputParam entity.UpdateUmkmParam) error
 	Delete(param entity.UmkmParam) error
+	ValidateUmkm(ctx context.Context, umkmId uint, user auth.UserAuthInfo) error
 }
 
 type umkm struct {
@@ -71,6 +75,14 @@ func (u *umkm) Update(param entity.UmkmParam, inputParam entity.UpdateUmkmParam)
 func (u *umkm) Delete(param entity.UmkmParam) error {
 	if err := u.umkm.Delete(param); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (u *umkm) ValidateUmkm(ctx context.Context, umkmId uint, user auth.UserAuthInfo) error {
+	if (umkmId != user.User.UmkmID && !user.User.IsAdmin) || umkmId == 0 {
+		return errors.New("unauthorized")
 	}
 
 	return nil

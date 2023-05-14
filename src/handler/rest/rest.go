@@ -137,25 +137,27 @@ func (r *rest) Register() {
 	umkm.POST("/create", r.VerifyUser, r.VerifyAdmin, r.CreateUmkm)
 	umkm.GET("/:umkm_id", r.VerifyUser, r.GetUmkmByID)
 	umkm.GET("", r.VerifyUser, r.GetUmkmList)
-	umkm.PUT("/:umkm_id", r.VerifyUser, r.VerifyAdmin, r.UpdateUmkm)
-	umkm.DELETE("/:umkm_id", r.VerifyUser, r.VerifyAdmin, r.DeleteUmkm)
+	umkm.PUT("/:umkm_id", r.VerifyUser, r.VerifyUmkm, r.UpdateUmkm)
+	umkm.DELETE("/:umkm_id", r.VerifyUser, r.VerifyUmkm, r.DeleteUmkm)
 
-	menu := v1.Group("/menu")
-	menu.POST("/create", r.VerifyUser, r.VerifyAdmin, r.CreateMenu)
-	menu.GET("/:menu_id", r.VerifyUser, r.GetMenuByID)
-	menu.GET("", r.VerifyUser, r.GetMenuList)
-	menu.PUT("/:menu_id", r.VerifyUser, r.VerifyAdmin, r.UpdateMenu)
-	menu.DELETE("/:menu_id", r.VerifyUser, r.VerifyAdmin, r.DeleteMenu)
+	// menu
+	umkm.POST("/:umkm_id/menu/create", r.VerifyUser, r.VerifyUmkm, r.CreateMenu)
+	umkm.GET("/:umkm_id/menu/:menu_id", r.VerifyUser, r.GetMenuByID)
+	umkm.GET("/:umkm_id/menu", r.VerifyUser, r.GetMenuList)
+	umkm.PUT("/:umkm_id/menu/:menu_id", r.VerifyUser, r.VerifyUmkm, r.UpdateMenu)
+	umkm.DELETE("/:umkm_id/menu/:menu_id", r.VerifyUser, r.VerifyUmkm, r.DeleteMenu)
 
 	cart := v1.Group("/cart")
 	cart.POST("/create", r.VerifyUser, r.AddMenuToCart)
 	cart.GET("", r.VerifyUser, r.GetListCartByUser)
 	cart.DELETE("/:cart_id", r.VerifyUser, r.VerifyCart, r.DeleteItemCart)
 
+	// transaction
+	umkm.GET("/:umkm_id/transactions", r.VerifyUser, r.VerifyUmkm, r.GetTransactionListUmkm)
 	transaction := v1.Group("/transaction")
 	transaction.POST("/create", r.VerifyUser, r.CreateOrder)
 	transaction.GET("/:transaction_id/payment-detail", r.VerifyUser, r.GetPaymentDetail)
-	transaction.GET("/:transaction_id", r.VerifyUser, r.GetOrderDetail)
+	transaction.GET("/:transaction_id", r.GetOrderDetail)
 
 	midtransTransaction := v1.Group("/midtrans-transaction")
 	midtransTransaction.POST("/handle", r.HandleNotification)

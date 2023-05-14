@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -93,6 +94,24 @@ func (r *rest) VerifyAdmin(ctx *gin.Context) {
 
 	if !user.User.IsAdmin {
 		r.httpRespError(ctx, http.StatusUnauthorized, errors.New("dont have access"))
+		return
+	}
+
+	ctx.Next()
+}
+
+func (r *rest) VerifyUmkm(ctx *gin.Context) {
+	user, err := r.auth.GetUserAuthInfo(ctx.Request.Context())
+	if err != nil {
+		r.httpRespError(ctx, http.StatusUnauthorized, err)
+		return
+	}
+
+	umkmIDp := ctx.Param("umkm_id")
+	umkmID, _ := strconv.Atoi(umkmIDp)
+
+	if err := r.uc.Umkm.ValidateUmkm(ctx, uint(umkmID), user); err != nil {
+		r.httpRespError(ctx, http.StatusUnauthorized, err)
 		return
 	}
 
