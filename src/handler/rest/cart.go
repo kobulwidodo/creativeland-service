@@ -35,6 +35,34 @@ func (r *rest) AddMenuToCart(ctx *gin.Context) {
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully add item to cart", cart)
 }
 
+// @Summary Decrease Item
+// @Description Decrease Item from cart
+// @Security BearerAuth
+// @Tags Cart
+// @Param cart_id path integer true "cart id"
+// @Produce json
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/cart/{cart_id}/decrease [PUT]
+func (r *rest) DecreaseItem(ctx *gin.Context) {
+	var param entity.CartParam
+	if err := ctx.ShouldBindUri(&param); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err := r.uc.Cart.DecreaseItem(ctx.Request.Context(), param)
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully decrease item to cart", nil)
+}
+
 // @Summary Get List Cart
 // @Description Get List Cart by User Logged in
 // @Security BearerAuth

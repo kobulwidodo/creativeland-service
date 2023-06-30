@@ -14,6 +14,7 @@ import (
 // @Description Create New Menu
 // @Security BearerAuth
 // @Tags Menu
+// @Param umkm_id path integer true "umkm id"
 // @Param menu body entity.CreateMenuParam true "menu info"
 // @Produce json
 // @Success 200 {object} entity.Response{data=entity.Menu{}}
@@ -21,15 +22,21 @@ import (
 // @Failure 401 {object} entity.Response{}
 // @Failure 404 {object} entity.Response{}
 // @Failure 500 {object} entity.Response{}
-// @Router /api/v1/menu/create [POST]
+// @Router /api/v1/umkm/{umkm_id}/menu/create [POST]
 func (r *rest) CreateMenu(ctx *gin.Context) {
+	var menuParam entity.MenuParam
+	if err := ctx.ShouldBindUri(&menuParam); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
 	var menuInput entity.CreateMenuParam
 	if err := ctx.ShouldBindJSON(&menuInput); err != nil {
 		r.httpRespError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	menu, err := r.uc.Menu.Create(menuInput)
+	menu, err := r.uc.Menu.Create(menuInput, menuParam)
 	if err != nil {
 		r.httpRespError(ctx, http.StatusInternalServerError, err)
 		return
@@ -72,6 +79,7 @@ func (r *rest) GetMenuByID(ctx *gin.Context) {
 // @Tags Menu
 // @Produce json
 // @Param umkm_id query integer false "umkm id"
+// @Param name query string false "name"
 // @Success 200 {object} entity.Response{data=[]entity.Menu{}}
 // @Failure 400 {object} entity.Response{}
 // @Failure 401 {object} entity.Response{}

@@ -129,7 +129,7 @@ func (r *rest) Register() {
 	})
 
 	auth := v1.Group("/auth")
-	auth.POST("/register", r.RegisterUser)
+	auth.POST("/register", r.VerifyUser, r.VerifyAdmin, r.RegisterUser)
 	auth.POST("/login", r.LoginUser)
 	auth.POST("/guest", r.LoginGuestUser)
 
@@ -141,15 +141,17 @@ func (r *rest) Register() {
 	umkm.DELETE("/:umkm_id", r.VerifyUser, r.VerifyUmkm, r.DeleteUmkm)
 
 	// menu
+	menu := v1.Group("/menu")
 	umkm.POST("/:umkm_id/menu/create", r.VerifyUser, r.VerifyUmkm, r.CreateMenu)
-	umkm.GET("/:umkm_id/menu/:menu_id", r.VerifyUser, r.GetMenuByID)
-	umkm.GET("/:umkm_id/menu", r.VerifyUser, r.GetMenuList)
-	umkm.PUT("/:umkm_id/menu/:menu_id", r.VerifyUser, r.VerifyUmkm, r.UpdateMenu)
-	umkm.DELETE("/:umkm_id/menu/:menu_id", r.VerifyUser, r.VerifyUmkm, r.DeleteMenu)
+	menu.GET("/:menu_id", r.VerifyUser, r.GetMenuByID)
+	menu.GET("", r.VerifyUser, r.GetMenuList)
+	menu.PUT("/:menu_id", r.VerifyUser, r.VerifyMenu, r.UpdateMenu)
+	menu.DELETE("/:menu_id", r.VerifyUser, r.VerifyMenu, r.DeleteMenu)
 
 	cart := v1.Group("/cart")
 	cart.POST("/create", r.VerifyUser, r.AddMenuToCart)
 	cart.GET("", r.VerifyUser, r.GetListCartByUser)
+	cart.PUT("/:cart_id/decrease", r.VerifyUser, r.DecreaseItem)
 	cart.DELETE("/:cart_id", r.VerifyUser, r.VerifyCart, r.DeleteItemCart)
 
 	// transaction
@@ -161,6 +163,9 @@ func (r *rest) Register() {
 
 	midtransTransaction := v1.Group("/midtrans-transaction")
 	midtransTransaction.POST("/handle", r.HandleNotification)
+
+	user := v1.Group("/user")
+	user.GET("/cart-count", r.VerifyUser, r.GetCartCount)
 }
 
 func (r *rest) registerSwaggerRoutes() {

@@ -1,7 +1,9 @@
 package user
 
 import (
+	"context"
 	"errors"
+	cartDom "go-clean/src/business/domain/cart"
 	userDom "go-clean/src/business/domain/user"
 	"go-clean/src/business/entity"
 	"go-clean/src/lib/auth"
@@ -14,17 +16,20 @@ type Interface interface {
 	Login(params entity.LoginUserParam) (string, error)
 	GenerateGuestToken() (string, error)
 	GetById(id uint) (entity.User, error)
+	GetCartCount(ctx context.Context) (int, error)
 }
 
 type user struct {
 	user userDom.Interface
 	auth auth.Interface
+	cart cartDom.Interface
 }
 
-func Init(ad userDom.Interface, auth auth.Interface) Interface {
+func Init(ad userDom.Interface, auth auth.Interface, cd cartDom.Interface) Interface {
 	a := &user{
 		user: ad,
 		auth: auth,
+		cart: cd,
 	}
 
 	return a
@@ -34,6 +39,7 @@ func (a *user) Create(params entity.CreateUserParam) (entity.User, error) {
 	user := entity.User{
 		Username: params.Username,
 		Nama:     params.Nama,
+		UmkmID:   params.UmkmID,
 	}
 
 	hashPass, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.MinCost)
@@ -89,4 +95,27 @@ func (a *user) GenerateGuestToken() (string, error) {
 	}
 
 	return token, nil
+}
+
+func (u *user) GetCartCount(ctx context.Context) (int, error) {
+	result := 0
+
+	user, err := u.auth.GetUserAuthInfo(ctx)
+	if err != nil {
+		return result, err
+	}
+
+	carts, err := u.cart.GetList(entity.CartParam{
+		GuestID: user.User.GuestID,
+		Status:  entity.StatusInCart,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	for _, c := range carts {
+		result += c.Amount
+	}
+
+	return result, nil
 }

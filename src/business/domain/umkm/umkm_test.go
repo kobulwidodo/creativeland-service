@@ -160,7 +160,7 @@ func Test_umkm_GetAll(t *testing.T) {
 			}
 
 			u := Init(sqlClient)
-			got, err := u.GetAll(tt.args.param)
+			got, err := u.GetList(tt.args.param)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("umkm.GetAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -254,10 +254,8 @@ func Test_umkm_Update(t *testing.T) {
 	querySql := "UPDATE"
 	query := regexp.QuoteMeta(querySql)
 
-	selectParam := entity.Umkm{
-		Model: gorm.Model{
-			ID: 1,
-		},
+	selectParam := entity.UmkmParam{
+		ID: 1,
 	}
 
 	updateParam := entity.UpdateUmkmParam{
@@ -265,7 +263,7 @@ func Test_umkm_Update(t *testing.T) {
 	}
 
 	type args struct {
-		selectParam entity.Umkm
+		selectParam entity.UmkmParam
 		updateParam entity.UpdateUmkmParam
 	}
 	tests := []struct {

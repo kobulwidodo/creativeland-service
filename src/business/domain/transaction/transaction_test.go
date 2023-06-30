@@ -166,3 +166,82 @@ func Test_transaction_Get(t *testing.T) {
 		})
 	}
 }
+
+func Test_transaction_GetListByIDs(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	querySql := "SELECT * FROM `transactions` WHERE `transactions`.`id` = ? AND `transactions`.`deleted_at` IS NULL"
+	query := regexp.QuoteMeta(querySql)
+
+	mockParam := []uint{1}
+
+	type args struct {
+		param []uint
+	}
+	tests := []struct {
+		name        string
+		args        args
+		prepSqlMock func() (*sql.DB, error)
+		want        []entity.Transaction
+		wantErr     bool
+	}{
+		{
+			name: "failed to exec query",
+			args: args{
+				param: mockParam,
+			},
+			prepSqlMock: func() (*sql.DB, error) {
+				sqlServer, sqlMock, err := sqlmock.New()
+				sqlMock.ExpectQuery(query).WillReturnError(assert.AnError)
+				return sqlServer, err
+			},
+			want:    []entity.Transaction{},
+			wantErr: true,
+		},
+		{
+			name: "all ok",
+			args: args{
+				param: mockParam,
+			},
+			prepSqlMock: func() (*sql.DB, error) {
+				sqlServer, sqlMock, err := sqlmock.New()
+				row := sqlmock.NewRows([]string{"buyer_name"})
+				row.AddRow("mail")
+				sqlMock.ExpectQuery(query).WillReturnRows(row)
+				return sqlServer, err
+			},
+			want: []entity.Transaction{
+				{
+					BuyerName: "mail",
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sqlServer, err := tt.prepSqlMock()
+			if err != nil {
+				t.Error(err)
+			}
+			defer sqlServer.Close()
+
+			sqlClient, err := gorm.Open(mysql.New(mysql.Config{
+				Conn:                      sqlServer,
+				SkipInitializeWithVersion: true,
+			}))
+			if err != nil {
+				t.Error(err)
+			}
+
+			u := Init(sqlClient)
+			got, err := u.GetListByIDs(tt.args.param)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("transaction.GetListByIDs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

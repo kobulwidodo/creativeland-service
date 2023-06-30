@@ -9,6 +9,7 @@ import (
 	midtransDom "go-clean/src/business/domain/midtrans"
 	midtransTransactionDom "go-clean/src/business/domain/midtrans_transaction"
 	transactionDom "go-clean/src/business/domain/transaction"
+	umkmDom "go-clean/src/business/domain/umkm"
 	"go-clean/src/business/entity"
 	"go-clean/src/lib/auth"
 	"go-clean/src/lib/midtrans"
@@ -28,16 +29,18 @@ type transaction struct {
 	cart                cartDom.Interface
 	auth                auth.Interface
 	menu                menuDom.Interface
+	umkm                umkmDom.Interface
 	midtrans            midtransDom.Interface
 	midtransTransaction midtransTransactionDom.Interface
 }
 
-func Init(auth auth.Interface, td transactionDom.Interface, cd cartDom.Interface, md menuDom.Interface, mtd midtransDom.Interface, mtt midtransTransactionDom.Interface) Interface {
+func Init(auth auth.Interface, td transactionDom.Interface, cd cartDom.Interface, md menuDom.Interface, ud umkmDom.Interface, mtd midtransDom.Interface, mtt midtransTransactionDom.Interface) Interface {
 	t := &transaction{
 		transaction:         td,
 		cart:                cd,
 		auth:                auth,
 		menu:                md,
+		umkm:                ud,
 		midtrans:            mtd,
 		midtransTransaction: mtt,
 	}
@@ -174,7 +177,9 @@ func (t *transaction) convertToItemsDetails(carts []entity.Cart, menus map[int]e
 func (t *transaction) GetOrderDetail(ctx context.Context, param entity.TransactionParam) (entity.TransactionDetailResponse, error) {
 	result := entity.TransactionDetailResponse{}
 
-	transaction, err := t.transaction.Get(param)
+	transaction, err := t.transaction.Get(entity.TransactionParam{
+		ID: param.ID,
+	})
 	if err != nil {
 		return result, err
 	}
@@ -198,6 +203,16 @@ func (t *transaction) GetOrderDetail(ctx context.Context, param entity.Transacti
 		menusID = append(menusID, int64(c.MenuID))
 	}
 
+	umkms, err := t.umkm.GetList(entity.UmkmParam{})
+	if err != nil {
+		return result, err
+	}
+
+	umkmMap := make(map[uint]entity.Umkm)
+	for _, u := range umkms {
+		umkmMap[u.ID] = u
+	}
+
 	menus, err := t.menu.GetListInByID(menusID)
 	if err != nil {
 		return result, err
@@ -219,6 +234,7 @@ func (t *transaction) GetOrderDetail(ctx context.Context, param entity.Transacti
 
 	for _, c := range carts {
 		itemMenu := entity.ItemMenu{
+			UmkmName:     umkmMap[c.UmkmID].Name,
 			Name:         menuMap[c.MenuID].Name,
 			Price:        c.TotalPrice,
 			Qty:          c.Amount,
@@ -283,8 +299,6 @@ func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity
 		itemMenus := []entity.ItemMenu{}
 		for _, cm := range cartsMap[t.ID] {
 			itemMenus = append(itemMenus, entity.ItemMenu{
-				UmkmID:       cm.UmkmID,
-				MenuID:       cm.MenuID,
 				Name:         menusMap[cm.MenuID].Name,
 				Price:        cm.TotalPrice,
 				Qty:          cm.Amount,

@@ -118,6 +118,24 @@ func (r *rest) VerifyUmkm(ctx *gin.Context) {
 	ctx.Next()
 }
 
+func (r *rest) VerifyMenu(ctx *gin.Context) {
+	user, err := r.auth.GetUserAuthInfo(ctx.Request.Context())
+	if err != nil {
+		r.httpRespError(ctx, http.StatusUnauthorized, err)
+		return
+	}
+
+	menuIDp := ctx.Param("menu_id")
+	menuID, _ := strconv.Atoi(menuIDp)
+
+	if err := r.uc.Menu.ValidateMenu(ctx, uint(menuID), user); err != nil {
+		r.httpRespError(ctx, http.StatusUnauthorized, err)
+		return
+	}
+
+	ctx.Next()
+}
+
 func (r *rest) VerifyCart(ctx *gin.Context) {
 	user, err := r.auth.GetUserAuthInfo(ctx.Request.Context())
 	if err != nil {

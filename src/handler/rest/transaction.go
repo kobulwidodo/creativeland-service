@@ -32,7 +32,7 @@ func (r *rest) CreateOrder(ctx *gin.Context) {
 		return
 	}
 
-	r.httpRespSuccess(ctx, http.StatusCreated, "successfully created new order", id)
+	r.httpRespSuccess(ctx, http.StatusCreated, "successfully created new order", gin.H{"id": id})
 }
 
 // @Summary Get Order

@@ -14,7 +14,7 @@ type Transaction struct {
 type CreateTransactionParam struct {
 	BuyerName string `binding:"required"`
 	Seat      string `binding:"required"`
-	Notes     string `binding:"required"`
+	Notes     string
 	PaymentID int    `binding:"required"`
 	Email     string `binding:"required"`
 }
@@ -37,8 +37,7 @@ type TransactionDetailResponse struct {
 }
 
 type ItemMenu struct {
-	UmkmID       uint   `json:"umkm_id"`
-	MenuID       uint   `json:"menu_id"`
+	UmkmName     string `json:"umkm_name"`
 	Name         string `json:"name"`
 	Price        int    `json:"price"`
 	Qty          int    `json:"qty"`

@@ -22,11 +22,11 @@ type Usecase struct {
 
 func Init(auth auth.Interface, d *domain.Domains) *Usecase {
 	uc := &Usecase{
-		User:                user.Init(d.User, auth),
+		User:                user.Init(d.User, auth, d.Cart),
 		Umkm:                umkm.Init(d.Umkm),
 		Menu:                menu.Init(d.Menu),
-		Cart:                cart.Init(d.Cart, auth, d.Menu),
-		Transaction:         transaction.Init(auth, d.Transaction, d.Cart, d.Menu, d.Midtrans, d.MidtransTransaction),
+		Cart:                cart.Init(d.Cart, auth, d.Menu, d.Umkm),
+		Transaction:         transaction.Init(auth, d.Transaction, d.Cart, d.Menu, d.Umkm, d.Midtrans, d.MidtransTransaction),
 		MidtransTransaction: midtranstransaction.Init(d.MidtransTransaction, d.Midtrans, d.Cart),
 	}
 

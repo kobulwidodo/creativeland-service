@@ -83,7 +83,7 @@ func (r *rest) GetUmkmList(ctx *gin.Context) {
 		return
 	}
 
-	umkms, err := r.uc.Umkm.GetAll(umkmParam)
+	umkms, err := r.uc.Umkm.GetList(umkmParam)
 	if err != nil {
 		r.httpRespError(ctx, http.StatusInternalServerError, err)
 		return

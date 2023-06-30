@@ -9,16 +9,18 @@ import (
 )
 
 type Config struct {
-	Host     string `mapstructure:"SQL_HOST"`
-	Username string `mapstructure:"SQL_USERNAME"`
-	Password string `mapstructure:"SQL_PASSWORD"`
-	Port     string `mapstructure:"SQL_PORT"`
-	Database string `mapstructure:"SQL_DATABASE"`
+	Host     string
+	Username string
+	Password string
+	Port     string
+	Database string
 }
 
 func Init(cfg Config) *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.Database)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 	if err != nil {
 		panic(err)
 	}

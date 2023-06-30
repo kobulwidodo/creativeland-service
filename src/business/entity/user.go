@@ -20,6 +20,7 @@ type CreateUserParam struct {
 	Username string `binding:"required"`
 	Password string `binding:"required"`
 	Nama     string `binding:"required"`
+	UmkmID   uint   `binding:"required"`
 }
 
 type LoginUserParam struct {

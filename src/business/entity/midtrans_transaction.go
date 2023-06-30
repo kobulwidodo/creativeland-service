@@ -31,12 +31,14 @@ type PaymentData struct {
 }
 
 type MidtransTransactionParam struct {
+	ID            uint   `json:"id"`
 	TransactionID uint   `uri:"transaction_id" json:"transaction_id"`
 	OrderID       string `json:"order_id"`
 }
 
 type MidtransTransactionPaymentDetail struct {
 	Status      string      `json:"status"`
+	MidtransID  string      `json:"midtrans_id"`
 	PaymentData PaymentData `json:"payment_data"`
 }
 

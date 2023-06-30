@@ -9,7 +9,7 @@ import (
 type Interface interface {
 	Create(midtransTransaction entity.MidtransTransaction) (entity.MidtransTransaction, error)
 	Get(param entity.MidtransTransactionParam) (entity.MidtransTransaction, error)
-	Update(selectParam entity.MidtransTransaction, updateParam entity.UpdateMidtransTransactionParam) error
+	Update(selectParam entity.MidtransTransactionParam, updateParam entity.UpdateMidtransTransactionParam) error
 }
 
 type midtransTransaction struct {
@@ -41,10 +41,8 @@ func (mt *midtransTransaction) Get(param entity.MidtransTransactionParam) (entit
 	return res, nil
 }
 
-func (mt *midtransTransaction) Update(selectParam entity.MidtransTransaction, updateParam entity.UpdateMidtransTransactionParam) error {
-	if err := mt.db.Model(&selectParam).Updates(entity.MidtransTransaction{
-		Status: updateParam.Status,
-	}).Error; err != nil {
+func (mt *midtransTransaction) Update(selectParam entity.MidtransTransactionParam, updateParam entity.UpdateMidtransTransactionParam) error {
+	if err := mt.db.Model(entity.MidtransTransaction{}).Where(selectParam).Updates(updateParam).Error; err != nil {
 		return err
 	}
 

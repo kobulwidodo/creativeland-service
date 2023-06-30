@@ -1,6 +1,7 @@
 package umkm
 
 import (
+	"fmt"
 	"go-clean/src/business/entity"
 
 	"gorm.io/gorm"
@@ -8,9 +9,10 @@ import (
 
 type Interface interface {
 	Create(umkm entity.Umkm) (entity.Umkm, error)
-	GetAll(param entity.UmkmParam) ([]entity.Umkm, error)
+	GetList(param entity.UmkmParam) ([]entity.Umkm, error)
+	GetListInByID(ids []uint) ([]entity.Umkm, error)
 	Get(param entity.UmkmParam) (entity.Umkm, error)
-	Update(selectParam entity.Umkm, updateParam entity.UpdateUmkmParam) error
+	Update(selectParam entity.UmkmParam, updateParam entity.UpdateUmkmParam) error
 	Delete(param entity.UmkmParam) error
 }
 
@@ -34,10 +36,20 @@ func (u *umkm) Create(umkm entity.Umkm) (entity.Umkm, error) {
 	return umkm, nil
 }
 
-func (u *umkm) GetAll(param entity.UmkmParam) ([]entity.Umkm, error) {
+func (u *umkm) GetList(param entity.UmkmParam) ([]entity.Umkm, error) {
 	umkms := []entity.Umkm{}
 
-	if err := u.db.Where(param).Find(&umkms).Error; err != nil {
+	if err := u.db.Where(param).Where("name LIKE ?", fmt.Sprintf("%%%s%%", param.Name)).Find(&umkms).Error; err != nil {
+		return umkms, err
+	}
+
+	return umkms, nil
+}
+
+func (u *umkm) GetListInByID(ids []uint) ([]entity.Umkm, error) {
+	umkms := []entity.Umkm{}
+
+	if err := u.db.Where(ids).Find(&umkms).Error; err != nil {
 		return umkms, err
 	}
 
@@ -54,11 +66,8 @@ func (u *umkm) Get(param entity.UmkmParam) (entity.Umkm, error) {
 	return umkm, nil
 }
 
-func (u *umkm) Update(selectParam entity.Umkm, updateParam entity.UpdateUmkmParam) error {
-	if err := u.db.Model(&selectParam).Updates(entity.Umkm{
-		Name:   updateParam.Name,
-		Slogan: updateParam.Slogan,
-	}).Error; err != nil {
+func (u *umkm) Update(selectParam entity.UmkmParam, updateParam entity.UpdateUmkmParam) error {
+	if err := u.db.Model(entity.Umkm{}).Where(selectParam).Updates(updateParam).Error; err != nil {
 		return err
 	}
 

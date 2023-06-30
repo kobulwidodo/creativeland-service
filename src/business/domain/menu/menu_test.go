@@ -333,10 +333,8 @@ func Test_menu_Update(t *testing.T) {
 	querySql := "UPDATE"
 	query := regexp.QuoteMeta(querySql)
 
-	selectParam := entity.Menu{
-		Model: gorm.Model{
-			ID: 1,
-		},
+	selectParam := entity.MenuParam{
+		ID: 1,
 	}
 
 	updateParam := entity.UpdateMenuParam{
@@ -344,7 +342,7 @@ func Test_menu_Update(t *testing.T) {
 	}
 
 	type args struct {
-		selectParam entity.Menu
+		selectParam entity.MenuParam
 		updateParam entity.UpdateMenuParam
 	}
 	tests := []struct {
@@ -361,7 +359,7 @@ func Test_menu_Update(t *testing.T) {
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
-				sqlMock.ExpectQuery(query).WillReturnError(assert.AnError)
+				sqlMock.ExpectExec(query).WillReturnError(assert.AnError)
 				return sqlServer, err
 			},
 			wantErr: true,

@@ -21,6 +21,8 @@ type Cart struct {
 	Amount        int
 	TotalPrice    int
 	PricePerItem  int
+	Menu          Menu `grom:"-:all"`
+	Umkm          Umkm `grom:"-:all"`
 }
 
 type CartParam struct {
@@ -28,6 +30,7 @@ type CartParam struct {
 	TransactionID uint
 	Status        string
 	UmkmID        uint
+	MenuID        uint
 	GuestID       string
 }
 
@@ -40,4 +43,6 @@ type CreateCartParam struct {
 type UpdateCartParam struct {
 	TransactionID uint
 	Status        string
+	TotalPrice    int
+	Amount        int
 }

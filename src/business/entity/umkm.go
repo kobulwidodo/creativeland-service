@@ -10,7 +10,7 @@ type Umkm struct {
 
 type UmkmParam struct {
 	ID     uint   `json:"id" uri:"umkm_id"`
-	Name   string `json:"name" form:"name"`
+	Name   string `json:"name" form:"name" gorm:"-"`
 	Slogan string `json:"slogan"`
 }
 

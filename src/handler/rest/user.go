@@ -9,6 +9,7 @@ import (
 
 // @Summary Register User
 // @Description Register New User
+// @Security BearerAuth
 // @Tags Auth
 // @Param user body entity.CreateUserParam true "user info"
 // @Produce json
@@ -79,4 +80,25 @@ func (r *rest) LoginGuestUser(ctx *gin.Context) {
 	}
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully get guest token", token)
+}
+
+// @Summary Get Cart Count
+// @Description Get Cart Count by User Logged In
+// @Security BearerAuth
+// @Tags User
+// @Produce json
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/user/cart-count [GET]
+func (r *rest) GetCartCount(ctx *gin.Context) {
+	count, err := r.uc.User.GetCartCount(ctx.Request.Context())
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully get cart count", gin.H{"count": count})
 }

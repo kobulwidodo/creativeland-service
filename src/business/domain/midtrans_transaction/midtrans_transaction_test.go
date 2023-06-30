@@ -175,10 +175,8 @@ func Test_midtransTransaction_Update(t *testing.T) {
 	querySql := "UPDATE"
 	query := regexp.QuoteMeta(querySql)
 
-	selectParam := entity.MidtransTransaction{
-		Model: gorm.Model{
-			ID: 1,
-		},
+	selectParam := entity.MidtransTransactionParam{
+		ID: 1,
 	}
 
 	updateParam := entity.UpdateMidtransTransactionParam{
@@ -186,7 +184,7 @@ func Test_midtransTransaction_Update(t *testing.T) {
 	}
 
 	type args struct {
-		selectParam entity.MidtransTransaction
+		selectParam entity.MidtransTransactionParam
 		updateParam entity.UpdateMidtransTransactionParam
 	}
 	tests := []struct {

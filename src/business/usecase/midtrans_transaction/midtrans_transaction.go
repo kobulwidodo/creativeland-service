@@ -45,6 +45,7 @@ func (mtt *midtransTransaction) GetPaymentDetail(param entity.MidtransTransactio
 
 	result.Status = midtransTransaction.Status
 	result.PaymentData = paymentData
+	result.MidtransID = midtransTransaction.OrderID
 
 	return result, nil
 }
@@ -96,7 +97,9 @@ func (mtt *midtransTransaction) HandleNotification(payload map[string]interface{
 		}
 	}
 
-	if err := mtt.midtransTransaction.Update(midtransTransaction, entity.UpdateMidtransTransactionParam{
+	if err := mtt.midtransTransaction.Update(entity.MidtransTransactionParam{
+		ID: midtransTransaction.ID,
+	}, entity.UpdateMidtransTransactionParam{
 		Status: status,
 	}); err != nil {
 		return err

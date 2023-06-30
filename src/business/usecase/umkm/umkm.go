@@ -10,7 +10,7 @@ import (
 
 type Interface interface {
 	Create(params entity.CreateUmkmParam) (entity.Umkm, error)
-	GetAll(param entity.UmkmParam) ([]entity.Umkm, error)
+	GetList(param entity.UmkmParam) ([]entity.Umkm, error)
 	GetById(params entity.UmkmParam) (entity.Umkm, error)
 	Update(param entity.UmkmParam, inputParam entity.UpdateUmkmParam) error
 	Delete(param entity.UmkmParam) error
@@ -41,8 +41,8 @@ func (u *umkm) Create(params entity.CreateUmkmParam) (entity.Umkm, error) {
 	return umkm, nil
 }
 
-func (u *umkm) GetAll(param entity.UmkmParam) ([]entity.Umkm, error) {
-	umkms, err := u.umkm.GetAll(param)
+func (u *umkm) GetList(param entity.UmkmParam) ([]entity.Umkm, error) {
+	umkms, err := u.umkm.GetList(param)
 	if err != nil {
 		return umkms, err
 	}
@@ -65,7 +65,7 @@ func (u *umkm) Update(param entity.UmkmParam, inputParam entity.UpdateUmkmParam)
 		return err
 	}
 
-	if err := u.umkm.Update(umkm, inputParam); err != nil {
+	if err := u.umkm.Update(entity.UmkmParam{ID: umkm.ID}, inputParam); err != nil {
 		return err
 	}
 
@@ -81,7 +81,11 @@ func (u *umkm) Delete(param entity.UmkmParam) error {
 }
 
 func (u *umkm) ValidateUmkm(ctx context.Context, umkmId uint, user auth.UserAuthInfo) error {
-	if (umkmId != user.User.UmkmID && !user.User.IsAdmin) || umkmId == 0 {
+	if umkmId == 0 {
+		return errors.New("please provide umkm id")
+	}
+
+	if umkmId != user.User.UmkmID && !user.User.IsAdmin {
 		return errors.New("unauthorized")
 	}
 

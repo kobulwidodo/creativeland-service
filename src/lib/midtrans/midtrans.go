@@ -15,7 +15,7 @@ type Interface interface {
 }
 
 type Config struct {
-	ServerKey string `mapstructure:"MIDTRANS_SERVERKEY"`
+	ServerKey string
 }
 
 type midtrans struct {
