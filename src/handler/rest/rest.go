@@ -166,6 +166,7 @@ func (r *rest) Register() {
 
 	user := v1.Group("/user")
 	user.GET("/cart-count", r.VerifyUser, r.GetCartCount)
+	user.GET("/me", r.VerifyUser, r.GetMe)
 }
 
 func (r *rest) registerSwaggerRoutes() {

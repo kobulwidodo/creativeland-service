@@ -17,6 +17,7 @@ type Interface interface {
 	GenerateGuestToken() (string, error)
 	GetById(id uint) (entity.User, error)
 	GetCartCount(ctx context.Context) (int, error)
+	Me(ctx context.Context) (entity.User, error)
 }
 
 type user struct {
@@ -118,4 +119,18 @@ func (u *user) GetCartCount(ctx context.Context) (int, error) {
 	}
 
 	return result, nil
+}
+
+func (u *user) Me(ctx context.Context) (entity.User, error) {
+	user, err := u.auth.GetUserAuthInfo(ctx)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	me, err := u.user.GetById(user.User.ID)
+	if err != nil {
+		return me, err
+	}
+
+	return me, nil
 }
