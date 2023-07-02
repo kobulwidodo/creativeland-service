@@ -69,6 +69,7 @@ func (r *rest) GetOrderDetail(ctx *gin.Context) {
 // @Tags Transaction
 // @Param umkm_id path integer true "umkm id"
 // @Param status query string false "status" Enums(in_cart, unpaid, paid, done)
+// @Param status query string false "order_id"
 // @Produce json
 // @Success 200 {object} entity.Response{data=entity.TransactionDetailResponse}
 // @Failure 400 {object} entity.Response{}
@@ -95,4 +96,33 @@ func (r *rest) GetTransactionListUmkm(ctx *gin.Context) {
 	}
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully get transactions list", result)
+}
+
+// @Summary Complete Orders
+// @Description Mark order as done
+// @Security BearerAuth
+// @Tags Transaction
+// @Param umkm_id path integer true "umkm id"
+// @Param transaction_id path integer true "transaction id"
+// @Produce json
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/umkm/{umkm_id}/transaction/{transaction_id}/mark-as-done [PUT]
+func (r *rest) CompleteOrder(ctx *gin.Context) {
+	var param entity.TransactionParam
+	if err := ctx.ShouldBindUri(&param); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err := r.uc.Transaction.CompleteOrder(ctx.Request.Context(), param)
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully mark as done", nil)
 }

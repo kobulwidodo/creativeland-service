@@ -1,6 +1,7 @@
 package midtranstransaction
 
 import (
+	"fmt"
 	"go-clean/src/business/entity"
 
 	"gorm.io/gorm"
@@ -9,6 +10,7 @@ import (
 type Interface interface {
 	Create(midtransTransaction entity.MidtransTransaction) (entity.MidtransTransaction, error)
 	Get(param entity.MidtransTransactionParam) (entity.MidtransTransaction, error)
+	GetListByTrxIDs(ids []uint, param entity.MidtransTransactionParam) ([]entity.MidtransTransaction, error)
 	Update(selectParam entity.MidtransTransactionParam, updateParam entity.UpdateMidtransTransactionParam) error
 }
 
@@ -35,6 +37,15 @@ func (mt *midtransTransaction) Create(midtransTransaction entity.MidtransTransac
 func (mt *midtransTransaction) Get(param entity.MidtransTransactionParam) (entity.MidtransTransaction, error) {
 	res := entity.MidtransTransaction{}
 	if err := mt.db.Where(param).First(&res).Error; err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (mt *midtransTransaction) GetListByTrxIDs(ids []uint, param entity.MidtransTransactionParam) ([]entity.MidtransTransaction, error) {
+	res := []entity.MidtransTransaction{}
+	if err := mt.db.Where("transaction_id IN ?", ids).Where("order_id LIKE ?", fmt.Sprintf("%%%s%%", param.OrderID)).Find(&res).Error; err != nil {
 		return res, err
 	}
 

@@ -12,6 +12,7 @@ type Interface interface {
 	GetListInByID(ids []int64) ([]entity.Cart, error)
 	Get(param entity.CartParam) (entity.Cart, error)
 	Update(selectParam entity.CartParam, updateParam entity.UpdateCartParam) error
+	UpdatesByIDs(ids []uint, updateParam entity.UpdateCartParam) error
 	Delete(param entity.CartParam) error
 }
 
@@ -67,6 +68,14 @@ func (c *cart) Get(param entity.CartParam) (entity.Cart, error) {
 
 func (c *cart) Update(selectParam entity.CartParam, updateParam entity.UpdateCartParam) error {
 	if err := c.db.Model(entity.Cart{}).Where(selectParam).Updates(updateParam).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *cart) UpdatesByIDs(ids []uint, updateParam entity.UpdateCartParam) error {
+	if err := c.db.Model(entity.Cart{}).Where("id IN ?", ids).Updates(updateParam).Error; err != nil {
 		return err
 	}
 

@@ -13,6 +13,7 @@ import (
 	"go-clean/src/business/entity"
 	"go-clean/src/lib/auth"
 	"go-clean/src/lib/midtrans"
+	"log"
 	"strconv"
 
 	"github.com/midtrans/midtrans-go/coreapi"
@@ -22,6 +23,7 @@ type Interface interface {
 	Crete(ctx context.Context, param entity.CreateTransactionParam) (uint, error)
 	GetOrderDetail(ctx context.Context, param entity.TransactionParam) (entity.TransactionDetailResponse, error)
 	GetTransactionListByUmkm(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error)
+	CompleteOrder(ctx context.Context, param entity.TransactionParam) error
 }
 
 type transaction struct {
@@ -287,27 +289,68 @@ func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity
 		return result, err
 	}
 
+	midtransTransactions, err := t.midtransTransaction.GetListByTrxIDs(transactionIDs, entity.MidtransTransactionParam{
+		OrderID: param.MidtransOrderID,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	midtransTransactionMap := make(map[uint]entity.MidtransTransaction)
+	for _, mt := range midtransTransactions {
+		midtransTransactionMap[mt.TransactionID] = mt
+	}
+
 	for _, t := range transactions {
-		transactionDetail := entity.TransactionDetailResponse{
-			ID:        t.ID,
-			BuyerName: t.BuyerName,
-			Seat:      t.Seat,
-			Notes:     t.Notes,
-			Price:     t.Price,
-			Status:    cartsMap[t.ID][0].Status,
+		if _, ok := midtransTransactionMap[t.ID]; ok {
+			transactionDetail := entity.TransactionDetailResponse{
+				ID:              t.ID,
+				BuyerName:       t.BuyerName,
+				Seat:            t.Seat,
+				Notes:           t.Notes,
+				Price:           t.Price,
+				Status:          cartsMap[t.ID][0].Status,
+				MidtransOrderID: midtransTransactionMap[t.ID].OrderID,
+			}
+			itemMenus := []entity.ItemMenu{}
+			for _, cm := range cartsMap[t.ID] {
+				itemMenus = append(itemMenus, entity.ItemMenu{
+					Name:         menusMap[cm.MenuID].Name,
+					Price:        cm.TotalPrice,
+					Qty:          cm.Amount,
+					PricePerItem: cm.PricePerItem,
+				})
+			}
+			transactionDetail.ItemMenus = itemMenus
+			result = append(result, transactionDetail)
 		}
-		itemMenus := []entity.ItemMenu{}
-		for _, cm := range cartsMap[t.ID] {
-			itemMenus = append(itemMenus, entity.ItemMenu{
-				Name:         menusMap[cm.MenuID].Name,
-				Price:        cm.TotalPrice,
-				Qty:          cm.Amount,
-				PricePerItem: cm.PricePerItem,
-			})
-		}
-		transactionDetail.ItemMenus = itemMenus
-		result = append(result, transactionDetail)
 	}
 
 	return result, nil
+}
+
+func (t *transaction) CompleteOrder(ctx context.Context, param entity.TransactionParam) error {
+	carts, err := t.cart.GetList(entity.CartParam{
+		TransactionID: param.ID,
+		UmkmID:        param.UmkmID,
+		Status:        entity.StatusPaid,
+	})
+	if err != nil {
+		return err
+	}
+
+	log.Printf("%#v", carts)
+
+	cartsID := []uint{}
+	for _, c := range carts {
+		cartsID = append(cartsID, c.ID)
+	}
+
+	if err := t.cart.UpdatesByIDs(cartsID, entity.UpdateCartParam{
+		Status: entity.StatusDone,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

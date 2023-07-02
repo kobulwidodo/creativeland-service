@@ -20,20 +20,22 @@ type CreateTransactionParam struct {
 }
 
 type TransactionParam struct {
-	ID     uint   `uri:"transaction_id" json:"id"`
-	UmkmID uint   `uri:"umkm_id"`
-	Status string `form:"status"`
+	ID              uint   `uri:"transaction_id" json:"id"`
+	UmkmID          uint   `uri:"umkm_id"`
+	Status          string `form:"status"`
+	MidtransOrderID string `form:"order_id"`
 }
 
 type TransactionDetailResponse struct {
-	ID          uint       `json:"transaction_id"`
-	BuyerName   string     `json:"buyer_name"`
-	Seat        string     `json:"seat"`
-	Notes       string     `json:"notes"`
-	Price       int        `json:"price"`
-	Status      string     `json:"status"`
-	PaymentType string     `json:"payment_type,omitempty"`
-	ItemMenus   []ItemMenu `json:"item_menus"`
+	ID              uint       `json:"transaction_id"`
+	BuyerName       string     `json:"buyer_name"`
+	Seat            string     `json:"seat"`
+	Notes           string     `json:"notes"`
+	Price           int        `json:"price"`
+	Status          string     `json:"status"`
+	PaymentType     string     `json:"payment_type,omitempty"`
+	MidtransOrderID string     `json:"midtrans_order_id"`
+	ItemMenus       []ItemMenu `json:"item_menus"`
 }
 
 type ItemMenu struct {
