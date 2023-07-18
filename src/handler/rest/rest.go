@@ -168,6 +168,9 @@ func (r *rest) Register() {
 	user := v1.Group("/user")
 	user.GET("/cart-count", r.VerifyUser, r.GetCartCount)
 	user.GET("/me", r.VerifyUser, r.GetMe)
+
+	// analytic
+	umkm.GET("/:umkm_id/analytic/dashboard-widget", r.VerifyUser, r.VerifyUmkm, r.GetDashboardWidget)
 }
 
 func (r *rest) registerSwaggerRoutes() {

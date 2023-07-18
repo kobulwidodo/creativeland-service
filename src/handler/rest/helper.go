@@ -72,7 +72,9 @@ func (r *rest) VerifyUser(ctx *gin.Context) {
 			GuestID: claim["guest_id"].(string),
 		}
 	} else {
-		user, err = r.uc.User.GetById(uint(claim["id"].(float64)))
+		user, err = r.uc.User.Get(entity.UserParam{
+			ID: uint(claim["id"].(float64)),
+		})
 		if err != nil {
 			r.httpRespError(ctx, http.StatusUnauthorized, errors.New("error while getting user"))
 			return

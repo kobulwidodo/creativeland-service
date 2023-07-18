@@ -13,14 +13,13 @@ import (
 	"go-clean/src/business/entity"
 	"go-clean/src/lib/auth"
 	"go-clean/src/lib/midtrans"
-	"log"
 	"strconv"
 
 	"github.com/midtrans/midtrans-go/coreapi"
 )
 
 type Interface interface {
-	Crete(ctx context.Context, param entity.CreateTransactionParam) (uint, error)
+	Create(ctx context.Context, param entity.CreateTransactionParam) (uint, error)
 	GetOrderDetail(ctx context.Context, param entity.TransactionParam) (entity.TransactionDetailResponse, error)
 	GetTransactionListByUmkm(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error)
 	CompleteOrder(ctx context.Context, param entity.TransactionParam) error
@@ -50,7 +49,7 @@ func Init(auth auth.Interface, td transactionDom.Interface, cd cartDom.Interface
 	return t
 }
 
-func (t *transaction) Crete(ctx context.Context, param entity.CreateTransactionParam) (uint, error) {
+func (t *transaction) Create(ctx context.Context, param entity.CreateTransactionParam) (uint, error) {
 	user, err := t.auth.GetUserAuthInfo(ctx)
 	if err != nil {
 		return 0, err
@@ -338,8 +337,6 @@ func (t *transaction) CompleteOrder(ctx context.Context, param entity.Transactio
 	if err != nil {
 		return err
 	}
-
-	log.Printf("%#v", carts)
 
 	cartsID := []uint{}
 	for _, c := range carts {

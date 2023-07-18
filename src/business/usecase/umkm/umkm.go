@@ -11,7 +11,7 @@ import (
 type Interface interface {
 	Create(params entity.CreateUmkmParam) (entity.Umkm, error)
 	GetList(param entity.UmkmParam) ([]entity.Umkm, error)
-	GetById(params entity.UmkmParam) (entity.Umkm, error)
+	Get(params entity.UmkmParam) (entity.Umkm, error)
 	Update(param entity.UmkmParam, inputParam entity.UpdateUmkmParam) error
 	Delete(param entity.UmkmParam) error
 	ValidateUmkm(ctx context.Context, umkmId uint, user auth.UserAuthInfo) error
@@ -50,7 +50,7 @@ func (u *umkm) GetList(param entity.UmkmParam) ([]entity.Umkm, error) {
 	return umkms, nil
 }
 
-func (u *umkm) GetById(params entity.UmkmParam) (entity.Umkm, error) {
+func (u *umkm) Get(params entity.UmkmParam) (entity.Umkm, error) {
 	umkm, err := u.umkm.Get(params)
 	if err != nil {
 		return umkm, err

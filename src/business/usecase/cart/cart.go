@@ -16,6 +16,7 @@ type Interface interface {
 	GetListByUser(ctx context.Context) ([]entity.Cart, error)
 	Delete(ctx context.Context, param entity.CartParam) error
 	ValidateCart(ctx context.Context, cartId uint, guestId string) error
+	GetCartCount(ctx context.Context) (int, error)
 }
 
 type cart struct {
@@ -217,4 +218,27 @@ func (c *cart) Delete(ctx context.Context, param entity.CartParam) error {
 	}
 
 	return nil
+}
+
+func (c *cart) GetCartCount(ctx context.Context) (int, error) {
+	result := 0
+
+	user, err := c.auth.GetUserAuthInfo(ctx)
+	if err != nil {
+		return result, err
+	}
+
+	carts, err := c.cart.GetList(entity.CartParam{
+		GuestID: user.User.GuestID,
+		Status:  entity.StatusInCart,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	for _, c := range carts {
+		result += c.Amount
+	}
+
+	return result, nil
 }

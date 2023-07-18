@@ -94,7 +94,7 @@ func (r *rest) LoginGuestUser(ctx *gin.Context) {
 // @Failure 500 {object} entity.Response{}
 // @Router /api/v1/user/cart-count [GET]
 func (r *rest) GetCartCount(ctx *gin.Context) {
-	count, err := r.uc.User.GetCartCount(ctx.Request.Context())
+	count, err := r.uc.Cart.GetCartCount(ctx.Request.Context())
 	if err != nil {
 		r.httpRespError(ctx, http.StatusInternalServerError, err)
 		return

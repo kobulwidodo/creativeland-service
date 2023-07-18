@@ -64,7 +64,7 @@ func (r *rest) GetMenuByID(ctx *gin.Context) {
 		return
 	}
 
-	menu, err := r.uc.Menu.GetById(menuParam)
+	menu, err := r.uc.Menu.Get(menuParam)
 	if err != nil {
 		r.httpRespError(ctx, http.StatusInternalServerError, err)
 		return

@@ -26,7 +26,7 @@ func (r *rest) CreateOrder(ctx *gin.Context) {
 		return
 	}
 
-	id, err := r.uc.Transaction.Crete(ctx.Request.Context(), inputParam)
+	id, err := r.uc.Transaction.Create(ctx.Request.Context(), inputParam)
 	if err != nil {
 		r.httpRespError(ctx, http.StatusInternalServerError, err)
 		return

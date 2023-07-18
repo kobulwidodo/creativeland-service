@@ -16,6 +16,11 @@ type User struct {
 	GuestID  string `json:"-" gorm:"-:all"`
 }
 
+type UserParam struct {
+	ID       uint
+	Username string
+}
+
 type CreateUserParam struct {
 	Username string `binding:"required"`
 	Password string `binding:"required"`

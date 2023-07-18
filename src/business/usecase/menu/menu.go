@@ -11,7 +11,7 @@ import (
 type Interface interface {
 	Create(inputParam entity.CreateMenuParam, menuParam entity.MenuParam) (entity.Menu, error)
 	GetAll(param entity.MenuParam) ([]entity.Menu, error)
-	GetById(params entity.MenuParam) (entity.Menu, error)
+	Get(params entity.MenuParam) (entity.Menu, error)
 	Update(param entity.MenuParam, inputParam entity.UpdateMenuParam) error
 	Delete(param entity.MenuParam) error
 	ValidateMenu(ctx context.Context, menuID uint, user auth.UserAuthInfo) error
@@ -52,7 +52,7 @@ func (m *menu) GetAll(param entity.MenuParam) ([]entity.Menu, error) {
 	return menus, nil
 }
 
-func (m *menu) GetById(params entity.MenuParam) (entity.Menu, error) {
+func (m *menu) Get(params entity.MenuParam) (entity.Menu, error) {
 	menu, err := m.menu.Get(params)
 	if err != nil {
 		return menu, err

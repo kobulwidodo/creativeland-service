@@ -1,6 +1,7 @@
 package cart
 
 import (
+	"fmt"
 	"go-clean/src/business/entity"
 
 	"gorm.io/gorm"
@@ -39,7 +40,7 @@ func (c *cart) Create(cart entity.Cart) (entity.Cart, error) {
 func (c *cart) GetList(param entity.CartParam) ([]entity.Cart, error) {
 	cart := []entity.Cart{}
 
-	if err := c.db.Where(param).Find(&cart).Error; err != nil {
+	if err := c.db.Where(param).Where("created_at LIKE ?", fmt.Sprintf("%%%s%%", param.CreatedAt)).Find(&cart).Error; err != nil {
 		return cart, err
 	}
 

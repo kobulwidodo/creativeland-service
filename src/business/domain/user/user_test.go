@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -90,17 +90,19 @@ func Test_user_Create(t *testing.T) {
 	}
 }
 
-func Test_user_GetByUsername(t *testing.T) {
+func Test_user_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	querySql := "SELECT * FROM `users` WHERE username = ? AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1"
+	querySql := "SELECT * FROM `users` WHERE `users`.`username` = ? AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1"
 	query := regexp.QuoteMeta(querySql)
 
-	mockUsername := "admin"
+	mockParam := entity.UserParam{
+		Username: "username",
+	}
 
 	type args struct {
-		username string
+		param entity.UserParam
 	}
 	tests := []struct {
 		name        string
@@ -112,7 +114,7 @@ func Test_user_GetByUsername(t *testing.T) {
 		{
 			name: "failed to exec query",
 			args: args{
-				username: mockUsername,
+				param: mockParam,
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
@@ -125,7 +127,7 @@ func Test_user_GetByUsername(t *testing.T) {
 		{
 			name: "all ok",
 			args: args{
-				username: mockUsername,
+				param: mockParam,
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
@@ -157,82 +159,7 @@ func Test_user_GetByUsername(t *testing.T) {
 			}
 
 			u := Init(sqlClient)
-			got, err := u.GetByUsername(tt.args.username)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("umkm.Get() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
-func Test_user_GetById(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	querySql := "SELECT * FROM `users` WHERE id = ? AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1"
-	query := regexp.QuoteMeta(querySql)
-
-	type args struct {
-		id uint
-	}
-	tests := []struct {
-		name        string
-		args        args
-		prepSqlMock func() (*sql.DB, error)
-		want        entity.User
-		wantErr     bool
-	}{
-		{
-			name: "failed to exec query",
-			args: args{
-				id: 1,
-			},
-			prepSqlMock: func() (*sql.DB, error) {
-				sqlServer, sqlMock, err := sqlmock.New()
-				sqlMock.ExpectQuery(query).WillReturnError(assert.AnError)
-				return sqlServer, err
-			},
-			want:    entity.User{},
-			wantErr: true,
-		},
-		{
-			name: "all ok",
-			args: args{
-				id: 1,
-			},
-			prepSqlMock: func() (*sql.DB, error) {
-				sqlServer, sqlMock, err := sqlmock.New()
-				row := sqlmock.NewRows([]string{"username"})
-				row.AddRow("admin")
-				sqlMock.ExpectQuery(query).WillReturnRows(row)
-				return sqlServer, err
-			},
-			want: entity.User{
-				Username: "admin",
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sqlServer, err := tt.prepSqlMock()
-			if err != nil {
-				t.Error(err)
-			}
-			defer sqlServer.Close()
-
-			sqlClient, err := gorm.Open(mysql.New(mysql.Config{
-				Conn:                      sqlServer,
-				SkipInitializeWithVersion: true,
-			}))
-			if err != nil {
-				t.Error(err)
-			}
-
-			u := Init(sqlClient)
-			got, err := u.GetById(tt.args.id)
+			got, err := u.Get(tt.args.param)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("umkm.Get() error = %v, wantErr %v", err, tt.wantErr)
 				return

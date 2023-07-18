@@ -32,6 +32,7 @@ type CartParam struct {
 	UmkmID        uint
 	MenuID        uint
 	GuestID       string
+	CreatedAt     string `gorm:"-"`
 }
 
 type CreateCartParam struct {

@@ -15,8 +15,7 @@ type Interface interface {
 	Create(params entity.CreateUserParam) (entity.User, error)
 	Login(params entity.LoginUserParam) (string, error)
 	GenerateGuestToken() (string, error)
-	GetById(id uint) (entity.User, error)
-	GetCartCount(ctx context.Context) (int, error)
+	Get(param entity.UserParam) (entity.User, error)
 	Me(ctx context.Context) (entity.User, error)
 }
 
@@ -58,8 +57,10 @@ func (a *user) Create(params entity.CreateUserParam) (entity.User, error) {
 	return newUser, nil
 }
 
-func (a *user) GetById(id uint) (entity.User, error) {
-	user, err := a.user.GetById(id)
+func (a *user) Get(param entity.UserParam) (entity.User, error) {
+	user, err := a.user.Get(entity.UserParam{
+		ID: param.ID,
+	})
 	if err != nil {
 		return user, err
 	}
@@ -68,7 +69,9 @@ func (a *user) GetById(id uint) (entity.User, error) {
 }
 
 func (a *user) Login(params entity.LoginUserParam) (string, error) {
-	user, err := a.user.GetByUsername(params.Username)
+	user, err := a.user.Get(entity.UserParam{
+		Username: params.Username,
+	})
 	if err != nil {
 		return "", err
 	}
@@ -98,36 +101,15 @@ func (a *user) GenerateGuestToken() (string, error) {
 	return token, nil
 }
 
-func (u *user) GetCartCount(ctx context.Context) (int, error) {
-	result := 0
-
-	user, err := u.auth.GetUserAuthInfo(ctx)
-	if err != nil {
-		return result, err
-	}
-
-	carts, err := u.cart.GetList(entity.CartParam{
-		GuestID: user.User.GuestID,
-		Status:  entity.StatusInCart,
-	})
-	if err != nil {
-		return result, err
-	}
-
-	for _, c := range carts {
-		result += c.Amount
-	}
-
-	return result, nil
-}
-
 func (u *user) Me(ctx context.Context) (entity.User, error) {
 	user, err := u.auth.GetUserAuthInfo(ctx)
 	if err != nil {
 		return entity.User{}, err
 	}
 
-	me, err := u.user.GetById(user.User.ID)
+	me, err := u.user.Get(entity.UserParam{
+		ID: user.User.ID,
+	})
 	if err != nil {
 		return me, err
 	}

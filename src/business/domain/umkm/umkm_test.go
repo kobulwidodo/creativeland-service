@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -95,7 +95,7 @@ func Test_umkm_GetAll(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	querySql := "SELECT * FROM `umkms` WHERE `umkms`.`deleted_at` IS NULL"
+	querySql := "SELECT * FROM `umkms` WHERE name LIKE ? AND `umkms`.`deleted_at` IS NULL"
 	query := regexp.QuoteMeta(querySql)
 
 	mockParam := entity.UmkmParam{}
