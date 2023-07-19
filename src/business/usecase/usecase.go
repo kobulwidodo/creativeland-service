@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"go-clean/src/business/domain"
-	analytic "go-clean/src/business/usecase/Analytic"
+	analytic "go-clean/src/business/usecase/analytic"
 	"go-clean/src/business/usecase/cart"
 	"go-clean/src/business/usecase/menu"
 	midtranstransaction "go-clean/src/business/usecase/midtrans_transaction"

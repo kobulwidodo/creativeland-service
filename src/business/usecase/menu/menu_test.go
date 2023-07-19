@@ -159,13 +159,15 @@ func Test_menu_GetAll(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt.mockFunc(mocks, tt.args)
-		got, err := m.GetAll(tt.args.param)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("menu.GetAll() error = %v, wantErr %v", err, tt.wantErr)
-			return
-		}
-		assert.Equal(t, tt.want, got)
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc(mocks, tt.args)
+			got, err := m.GetAll(tt.args.param)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("menu.GetAll() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
 

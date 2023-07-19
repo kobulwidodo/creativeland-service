@@ -20,7 +20,7 @@ import (
 // @Failure 500 {object} entity.Response{}
 // @Router /api/v1/umkm/{umkm_id}/analytic/dashboard-widget [GET]
 func (r *rest) GetDashboardWidget(ctx *gin.Context) {
-	var param entity.TransactionParam
+	var param entity.AnalyticParam
 	if err := ctx.ShouldBindUri(&param); err != nil {
 		r.httpRespError(ctx, http.StatusBadRequest, err)
 		return
