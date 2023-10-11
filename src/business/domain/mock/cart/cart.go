@@ -108,6 +108,36 @@ func (mr *MockInterfaceMockRecorder) GetListInByID(ids interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetListInByID", reflect.TypeOf((*MockInterface)(nil).GetListInByID), ids)
 }
 
+// GetListInByStatus mocks base method.
+func (m *MockInterface) GetListInByStatus(status []string, param entity.CartParam) ([]entity.Cart, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetListInByStatus", status, param)
+	ret0, _ := ret[0].([]entity.Cart)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetListInByStatus indicates an expected call of GetListInByStatus.
+func (mr *MockInterfaceMockRecorder) GetListInByStatus(status, param interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetListInByStatus", reflect.TypeOf((*MockInterface)(nil).GetListInByStatus), status, param)
+}
+
+// GetListInByTransactionID mocks base method.
+func (m *MockInterface) GetListInByTransactionID(transaction_ids []uint) ([]entity.Cart, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetListInByTransactionID", transaction_ids)
+	ret0, _ := ret[0].([]entity.Cart)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetListInByTransactionID indicates an expected call of GetListInByTransactionID.
+func (mr *MockInterfaceMockRecorder) GetListInByTransactionID(transaction_ids interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetListInByTransactionID", reflect.TypeOf((*MockInterface)(nil).GetListInByTransactionID), transaction_ids)
+}
+
 // Update mocks base method.
 func (m *MockInterface) Update(selectParam entity.CartParam, updateParam entity.UpdateCartParam) error {
 	m.ctrl.T.Helper()

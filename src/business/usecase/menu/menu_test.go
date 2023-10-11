@@ -90,13 +90,15 @@ func Test_menu_Create(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt.mockFunc(mocks, tt.args)
-		got, err := m.Create(tt.args.inputParam, tt.args.menuParam)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("menu.Create() error = %v, wantErr %v", err, tt.wantErr)
-			return
-		}
-		assert.Equal(t, tt.want, got)
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc(mocks, tt.args)
+			got, err := m.Create(tt.args.inputParam, tt.args.menuParam)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("menu.Create() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
 
@@ -319,12 +321,14 @@ func Test_menu_Update(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt.mockFunc(mocks, tt.args)
-		err := m.Update(tt.args.param, tt.args.inputParam)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("menu.Get() error = %v, wantErr %v", err, tt.wantErr)
-			return
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc(mocks, tt.args)
+			err := m.Update(tt.args.param, tt.args.inputParam)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("menu.Get() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
 }
 
@@ -380,12 +384,14 @@ func Test_menu_Delete(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt.mockFunc(mocks, tt.args)
-		err := m.Delete(tt.args.param)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("menu.Delete() error = %v, wantErr %v", err, tt.wantErr)
-			return
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc(mocks, tt.args)
+			err := m.Delete(tt.args.param)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("menu.Delete() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
 }
 

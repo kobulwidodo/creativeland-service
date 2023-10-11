@@ -7,6 +7,7 @@ import (
 	midtransDom "go-clean/src/business/domain/midtrans"
 	midtransTransactionDom "go-clean/src/business/domain/midtrans_transaction"
 	"go-clean/src/business/entity"
+	"log"
 )
 
 type Interface interface {
@@ -96,6 +97,11 @@ func (mtt *midtransTransaction) HandleNotification(payload map[string]interface{
 			status = entity.StatusPending
 		}
 	}
+	log.Println(status)
+	log.Println(orderId)
+	log.Printf("%#v\n", midtransTransaction)
+	log.Printf("%d\n", midtransTransaction.ID)
+	log.Printf("%d\n", midtransTransaction.TransactionID)
 
 	if err := mtt.midtransTransaction.Update(entity.MidtransTransactionParam{
 		ID: midtransTransaction.ID,

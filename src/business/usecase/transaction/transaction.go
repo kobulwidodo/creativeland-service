@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	cartDom "go-clean/src/business/domain/cart"
 	menuDom "go-clean/src/business/domain/menu"
 	midtransDom "go-clean/src/business/domain/midtrans"
@@ -13,7 +14,11 @@ import (
 	"go-clean/src/business/entity"
 	"go-clean/src/lib/auth"
 	"go-clean/src/lib/midtrans"
+	"go-clean/src/lib/timeutils"
+	"log"
+	"sort"
 	"strconv"
+	"time"
 
 	"github.com/midtrans/midtrans-go/coreapi"
 )
@@ -22,6 +27,9 @@ type Interface interface {
 	Create(ctx context.Context, param entity.CreateTransactionParam) (uint, error)
 	GetOrderDetail(ctx context.Context, param entity.TransactionParam) (entity.TransactionDetailResponse, error)
 	GetTransactionListByUmkm(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error)
+	GetTransactionList(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error)
+	GetMyTransaction(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error)
+	GetRecapSalesList(ctx context.Context, param entity.TransactionParam) ([]entity.SalesRecapResponse, error)
 	CompleteOrder(ctx context.Context, param entity.TransactionParam) error
 }
 
@@ -289,7 +297,7 @@ func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity
 	}
 
 	midtransTransactions, err := t.midtransTransaction.GetListByTrxIDs(transactionIDs, entity.MidtransTransactionParam{
-		OrderID: param.MidtransOrderID,
+		OrderIDLike: param.MidtransOrderID,
 	})
 	if err != nil {
 		return result, err
@@ -310,6 +318,7 @@ func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity
 				Price:           t.Price,
 				Status:          cartsMap[t.ID][0].Status,
 				MidtransOrderID: midtransTransactionMap[t.ID].OrderID,
+				CreatedAt:       timeutils.DiffForHumans(t.CreatedAt),
 			}
 			itemMenus := []entity.ItemMenu{}
 			for _, cm := range cartsMap[t.ID] {
@@ -324,6 +333,338 @@ func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity
 			result = append(result, transactionDetail)
 		}
 	}
+
+	return result, nil
+}
+
+func (t *transaction) GetTransactionList(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error) {
+	result := []entity.TransactionDetailResponse{}
+
+	midtransTransaction, err := t.midtransTransaction.GetList(entity.MidtransTransactionParam{
+		OrderIDLike: param.MidtransOrderID,
+		Limit:       param.Limit,
+		Offset:      (param.Page - 1) * param.Limit,
+		OrderBy:     "id desc",
+	})
+	if err != nil {
+		return result, err
+	}
+
+	if len(midtransTransaction) == 0 {
+		return result, errors.New("data not found")
+	}
+
+	midtransTransactionMap := make(map[uint]entity.MidtransTransaction)
+	for _, mt := range midtransTransaction {
+		midtransTransactionMap[mt.TransactionID] = mt
+	}
+
+	transactionIDs := []uint{}
+	for _, mt := range midtransTransaction {
+		transactionIDs = append(transactionIDs, mt.TransactionID)
+	}
+
+	transactions, err := t.transaction.GetListByIDs(transactionIDs)
+	if err != nil {
+		return result, err
+	}
+
+	carts, err := t.cart.GetListInByTransactionID(transactionIDs)
+	if err != nil {
+		return result, err
+	}
+	cartsMap := make(map[uint][]entity.Cart)
+	for _, c := range carts {
+		cartsMap[c.TransactionID] = append(cartsMap[c.TransactionID], c)
+	}
+
+	menuIDsMap := make(map[uint]bool)
+	menuIDs := []int64{}
+	for _, c := range carts {
+		if _, ok := menuIDsMap[c.MenuID]; !ok {
+			menuIDsMap[c.MenuID] = true
+			menuIDs = append(menuIDs, int64(c.MenuID))
+		}
+	}
+
+	menus, err := t.menu.GetListInByID(menuIDs)
+	if err != nil {
+		return result, err
+	}
+
+	menusMap := make(map[uint]entity.Menu)
+	for _, m := range menus {
+		menusMap[m.ID] = m
+	}
+
+	umkm, err := t.umkm.GetList(entity.UmkmParam{})
+	if err != nil {
+		return result, err
+	}
+
+	umkmsMap := make(map[uint]entity.Umkm)
+	for _, u := range umkm {
+		umkmsMap[u.ID] = u
+	}
+
+	for _, t := range transactions {
+		transactionDetail := entity.TransactionDetailResponse{
+			ID:              t.ID,
+			BuyerName:       t.BuyerName,
+			Seat:            t.Seat,
+			Notes:           t.Notes,
+			Price:           t.Price,
+			Status:          midtransTransactionMap[t.ID].Status,
+			MidtransOrderID: midtransTransactionMap[t.ID].OrderID,
+		}
+		itemMenus := []entity.ItemMenu{}
+		for _, c := range cartsMap[t.ID] {
+			itemMenus = append(itemMenus, entity.ItemMenu{
+				UmkmName:     umkmsMap[c.UmkmID].Name,
+				Name:         menusMap[c.MenuID].Name,
+				Status:       c.Status,
+				Price:        c.TotalPrice,
+				Qty:          c.Amount,
+				PricePerItem: c.PricePerItem,
+			})
+		}
+		transactionDetail.ItemMenus = itemMenus
+		result = append(result, transactionDetail)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID > result[j].ID
+	})
+
+	return result, nil
+}
+
+func (t *transaction) GetMyTransaction(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error) {
+	result := []entity.TransactionDetailResponse{}
+
+	user, err := t.auth.GetUserAuthInfo(ctx)
+	if err != nil {
+		return result, err
+	}
+
+	carts, err := t.cart.GetListInByStatus([]string{entity.StatusPaid, entity.StatusUnpaid, entity.StatusDone}, entity.CartParam{
+		GuestID: user.User.GuestID,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	if len(carts) == 0 {
+		return result, nil
+	}
+
+	cartsMap := make(map[uint][]entity.Cart)
+	menusMap := make(map[uint]entity.Menu)
+	umkmsMap := make(map[uint]entity.Umkm)
+	for _, c := range carts {
+		cartsMap[c.TransactionID] = append(cartsMap[c.TransactionID], c)
+		menusMap[c.MenuID] = entity.Menu{}
+		umkmsMap[c.UmkmID] = entity.Umkm{}
+	}
+
+	menuIDs := []int64{}
+	for k := range menusMap {
+		menuIDs = append(menuIDs, int64(k))
+	}
+	menus, err := t.menu.GetListInByID(menuIDs)
+	if err != nil {
+		return result, err
+	}
+	for _, m := range menus {
+		menusMap[m.ID] = m
+	}
+
+	umkmIDs := []uint{}
+	for k := range umkmsMap {
+		umkmIDs = append(umkmIDs, k)
+	}
+	umkms, err := t.umkm.GetListInByID(umkmIDs)
+	if err != nil {
+		return result, err
+	}
+	for _, u := range umkms {
+		umkmsMap[u.ID] = u
+	}
+
+	transactionIDs := []uint{}
+	for k := range cartsMap {
+		transactionIDs = append(transactionIDs, k)
+	}
+
+	sort.Slice(transactionIDs, func(i, j int) bool {
+		return transactionIDs[i] > transactionIDs[j]
+	})
+
+	if len(transactionIDs) > 10 {
+		transactionIDs = transactionIDs[:10]
+	}
+
+	transactions, err := t.transaction.GetListByIDs(transactionIDs)
+	if err != nil {
+		return result, err
+	}
+
+	midtransTransactions, err := t.midtransTransaction.GetListByTrxIDs(transactionIDs, entity.MidtransTransactionParam{
+		OrderIDLike: param.MidtransOrderID,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	midtransTransactionMap := make(map[uint]entity.MidtransTransaction)
+	for _, mt := range midtransTransactions {
+		midtransTransactionMap[mt.TransactionID] = mt
+	}
+
+	for _, t := range transactions {
+		if _, ok := midtransTransactionMap[t.ID]; ok {
+			transactionDetail := entity.TransactionDetailResponse{
+				ID:              t.ID,
+				BuyerName:       t.BuyerName,
+				Seat:            t.Seat,
+				Notes:           t.Notes,
+				Price:           t.Price,
+				Status:          midtransTransactionMap[t.ID].Status,
+				MidtransOrderID: midtransTransactionMap[t.ID].OrderID,
+				CreatedAt:       timeutils.DiffForHumans(t.CreatedAt),
+			}
+			itemMenus := []entity.ItemMenu{}
+			for _, cm := range cartsMap[t.ID] {
+				itemMenus = append(itemMenus, entity.ItemMenu{
+					UmkmName:     umkmsMap[cm.UmkmID].Name,
+					Name:         menusMap[cm.MenuID].Name,
+					Status:       cm.Status,
+					Price:        cm.TotalPrice,
+					Qty:          cm.Amount,
+					PricePerItem: cm.PricePerItem,
+				})
+			}
+			if transactionDetail.Status == entity.StatusUnpaid {
+				paymentData := entity.PaymentData{}
+				if err := json.Unmarshal([]byte(midtransTransactionMap[t.ID].PaymentData), &paymentData); err != nil {
+					log.Println("failed to un marshal payment data")
+					continue
+				}
+				transactionDetail.PaymentData = paymentData
+			}
+			transactionDetail.ItemMenus = itemMenus
+			result = append(result, transactionDetail)
+		}
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID > result[j].ID
+	})
+
+	return result, nil
+}
+
+func (t *transaction) GetRecapSalesList(ctx context.Context, param entity.TransactionParam) ([]entity.SalesRecapResponse, error) {
+	result := []entity.SalesRecapResponse{}
+
+	now := time.Now()
+	calcLastSevenDays := now.AddDate(0, 0, -7)
+
+	carts, err := t.cart.GetList(entity.CartParam{
+		Status:            entity.StatusDone,
+		CreatedAt:         param.Date,
+		CreatedAtMoreThan: calcLastSevenDays,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	if len(carts) == 0 {
+		return result, nil
+	}
+
+	umkms, err := t.umkm.GetList(entity.UmkmParam{})
+	if err != nil {
+		return result, err
+	}
+
+	umkmsMap := make(map[uint]entity.Umkm)
+	for _, u := range umkms {
+		umkmsMap[u.ID] = u
+	}
+
+	dateTrxMap := make(map[string]entity.SalesRecapResponse)
+
+	umkmRecapMap := make(map[entity.KeyUmkmDetailRecap]entity.UmkmDetailRecap)
+	for _, c := range carts {
+		dateFormetted := c.CreatedAt.Format("2006-01-02")
+		if _, ok := dateTrxMap[dateFormetted]; ok {
+			recap := dateTrxMap[dateFormetted]
+			recap.NetAmount += c.TotalPrice * 17 / 100
+			recap.GrossAmount += c.TotalPrice
+			dateTrxMap[dateFormetted] = recap
+			if _, ok := umkmRecapMap[entity.KeyUmkmDetailRecap{
+				ID:          c.UmkmID,
+				CreatedDate: dateFormetted,
+			}]; ok {
+				recap := umkmRecapMap[entity.KeyUmkmDetailRecap{
+					ID:          c.UmkmID,
+					CreatedDate: dateFormetted,
+				}]
+				recap.GrossAmount += c.TotalPrice
+				recap.NetAmount += c.TotalPrice * 83 / 100
+				recap.TotalOrder += c.Amount
+				umkmRecapMap[entity.KeyUmkmDetailRecap{
+					ID:          c.UmkmID,
+					CreatedDate: dateFormetted,
+				}] = recap
+			} else {
+				umkmRecapMap[entity.KeyUmkmDetailRecap{
+					ID:          c.UmkmID,
+					CreatedDate: dateFormetted,
+				}] = entity.UmkmDetailRecap{
+					ID:          c.UmkmID,
+					UmkmName:    umkmsMap[c.UmkmID].Name,
+					GrossAmount: c.TotalPrice,
+					NetAmount:   c.TotalPrice * 83 / 100,
+					TotalOrder:  c.Amount,
+				}
+			}
+		} else {
+			fmt.Println(c.UmkmID)
+			dateTrxMap[dateFormetted] = entity.SalesRecapResponse{
+				Date:        dateFormetted,
+				NetAmount:   c.TotalPrice * 17 / 100,
+				GrossAmount: c.TotalPrice,
+			}
+			umkmRecapMap[entity.KeyUmkmDetailRecap{
+				ID:          c.UmkmID,
+				CreatedDate: dateFormetted,
+			}] = entity.UmkmDetailRecap{
+				ID:          c.UmkmID,
+				UmkmName:    umkmsMap[c.UmkmID].Name,
+				GrossAmount: c.TotalPrice,
+				NetAmount:   c.TotalPrice * 83 / 100,
+				TotalOrder:  c.Amount,
+			}
+		}
+	}
+
+	for key, recap := range umkmRecapMap {
+		dateFormetted := key.CreatedDate
+		if dateTrx, ok := dateTrxMap[dateFormetted]; ok {
+			dateTrx.UmkmDetail = append(dateTrx.UmkmDetail, recap)
+			dateTrxMap[dateFormetted] = dateTrx
+		}
+	}
+
+	for _, sr := range dateTrxMap {
+		result = append(result, sr)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Date > result[j].Date
+	})
 
 	return result, nil
 }

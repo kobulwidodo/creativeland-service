@@ -9,6 +9,7 @@ import (
 	"go-clean/src/business/usecase/transaction"
 	"go-clean/src/business/usecase/umkm"
 	"go-clean/src/business/usecase/user"
+	"go-clean/src/business/usecase/withdraw"
 	"go-clean/src/lib/auth"
 )
 
@@ -20,6 +21,7 @@ type Usecase struct {
 	Transaction         transaction.Interface
 	MidtransTransaction midtranstransaction.Interface
 	Analytic            analytic.Interface
+	Withdraw            withdraw.Interface
 }
 
 func Init(auth auth.Interface, d *domain.Domains) *Usecase {
@@ -31,6 +33,7 @@ func Init(auth auth.Interface, d *domain.Domains) *Usecase {
 		Transaction:         transaction.Init(auth, d.Transaction, d.Cart, d.Menu, d.Umkm, d.Midtrans, d.MidtransTransaction),
 		MidtransTransaction: midtranstransaction.Init(d.MidtransTransaction, d.Midtrans, d.Cart),
 		Analytic:            analytic.Init(d.Cart),
+		Withdraw:            withdraw.Init(d.Withdraw, d.Umkm),
 	}
 
 	return uc

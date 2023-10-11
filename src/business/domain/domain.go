@@ -8,6 +8,7 @@ import (
 	"go-clean/src/business/domain/transaction"
 	"go-clean/src/business/domain/umkm"
 	"go-clean/src/business/domain/user"
+	"go-clean/src/business/domain/withdraw"
 	midtransSdk "go-clean/src/lib/midtrans"
 
 	"gorm.io/gorm"
@@ -21,6 +22,7 @@ type Domains struct {
 	Transaction         transaction.Interface
 	Midtrans            midtrans.Interface
 	MidtransTransaction midtranstransaction.Interface
+	Withdraw            withdraw.Interface
 }
 
 func Init(db *gorm.DB, m midtransSdk.Interface) *Domains {
@@ -32,6 +34,7 @@ func Init(db *gorm.DB, m midtransSdk.Interface) *Domains {
 		Transaction:         transaction.Init(db),
 		Midtrans:            midtrans.Init(m),
 		MidtransTransaction: midtranstransaction.Init(db),
+		Withdraw:            withdraw.Init(db),
 	}
 
 	return d

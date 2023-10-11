@@ -154,12 +154,17 @@ func (r *rest) Register() {
 	cart.PUT("/:cart_id/decrease", r.VerifyUser, r.DecreaseItem)
 	cart.DELETE("/:cart_id", r.VerifyUser, r.VerifyCart, r.DeleteItemCart)
 
+	admin := v1.Group("/admin")
+
 	// transaction
 	umkm.GET("/:umkm_id/transactions", r.VerifyUser, r.VerifyUmkm, r.GetTransactionListUmkm)
+	admin.GET("/transactions", r.VerifyUser, r.VerifyAdmin, r.GetTransactionList)
+	admin.GET("/transactions/recap", r.VerifyUser, r.VerifyAdmin, r.GetRecapSalesList)
 	transaction := v1.Group("/transaction")
 	transaction.POST("/create", r.VerifyUser, r.CreateOrder)
 	transaction.GET("/:transaction_id/payment-detail", r.VerifyUser, r.GetPaymentDetail)
 	transaction.GET("/:transaction_id", r.GetOrderDetail)
+	transaction.GET("/me", r.VerifyUser, r.GetMyTransaction)
 	umkm.PUT("/:umkm_id/transaction/:transaction_id/mark-as-done", r.VerifyUser, r.VerifyUmkm, r.CompleteOrder)
 
 	midtransTransaction := v1.Group("/midtrans-transaction")
@@ -171,6 +176,11 @@ func (r *rest) Register() {
 
 	// analytic
 	umkm.GET("/:umkm_id/analytic/dashboard-widget", r.VerifyUser, r.VerifyUmkm, r.GetDashboardWidget)
+	admin.GET("/analytic/dashboard-widget", r.VerifyUser, r.VerifyAdmin, r.GetAllDashboardWidget)
+
+	// withdraw
+	admin.GET("/withdraw", r.VerifyUser, r.VerifyAdmin, r.GetWithdrawList)
+	admin.POST("/withdraw", r.VerifyUser, r.VerifyAdmin, r.CreateWithdraw)
 }
 
 func (r *rest) registerSwaggerRoutes() {

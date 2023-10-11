@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -26,13 +28,14 @@ type Cart struct {
 }
 
 type CartParam struct {
-	ID            uint `uri:"cart_id" json:"id"`
-	TransactionID uint
-	Status        string
-	UmkmID        uint
-	MenuID        uint
-	GuestID       string
-	CreatedAt     string `gorm:"-"`
+	ID                uint `uri:"cart_id" json:"id"`
+	TransactionID     uint
+	Status            string
+	UmkmID            uint
+	MenuID            uint
+	GuestID           string
+	CreatedAt         string    `gorm:"-"`
+	CreatedAtMoreThan time.Time `json:"-" gorm:"-"`
 }
 
 type CreateCartParam struct {

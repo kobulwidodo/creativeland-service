@@ -38,7 +38,7 @@ func (m *midtrans) connect() {
 }
 
 func (m *midtrans) CreateOrder(param CreateOrderParam) (*coreapi.ChargeResponse, error) {
-	fmt.Printf("isi param : %#v", param)
+	fmt.Printf("isi param : %#v\n", param)
 	chargeReq := &coreapi.ChargeReq{
 		TransactionDetails: midtransSdk.TransactionDetails{
 			OrderID:  fmt.Sprintf("%s-%d-%d", "CL", param.OrderID, time.Now().Unix()),

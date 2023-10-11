@@ -89,13 +89,15 @@ func Test_midtransTransaction_GetPaymentDetail(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt.mockFunc(mocks, tt.args)
-		got, err := mt.GetPaymentDetail(tt.args.param)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("midtransTransaction.Create() error = %v, wantErr %v", err, tt.wantErr)
-			return
-		}
-		assert.Equal(t, tt.want, got)
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc(mocks, tt.args)
+			got, err := mt.GetPaymentDetail(tt.args.param)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("midtransTransaction.Create() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
 
@@ -336,11 +338,13 @@ func Test_midtransTransaction_HandleNotification(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt.mockFunc(mocks, tt.args)
-		err := mt.HandleNotification(tt.args.payload)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("midtransTransaction.HandleNotification() error = %v, wantErr %v", err, tt.wantErr)
-			return
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc(mocks, tt.args)
+			err := mt.HandleNotification(tt.args.payload)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("midtransTransaction.HandleNotification() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
 }

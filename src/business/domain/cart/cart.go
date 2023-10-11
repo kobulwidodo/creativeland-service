@@ -11,6 +11,8 @@ type Interface interface {
 	Create(cart entity.Cart) (entity.Cart, error)
 	GetList(param entity.CartParam) ([]entity.Cart, error)
 	GetListInByID(ids []int64) ([]entity.Cart, error)
+	GetListInByTransactionID(transaction_ids []uint) ([]entity.Cart, error)
+	GetListInByStatus(status []string, param entity.CartParam) ([]entity.Cart, error)
 	Get(param entity.CartParam) (entity.Cart, error)
 	Update(selectParam entity.CartParam, updateParam entity.UpdateCartParam) error
 	UpdatesByIDs(ids []uint, updateParam entity.UpdateCartParam) error
@@ -39,8 +41,15 @@ func (c *cart) Create(cart entity.Cart) (entity.Cart, error) {
 
 func (c *cart) GetList(param entity.CartParam) ([]entity.Cart, error) {
 	cart := []entity.Cart{}
+	query := c.db.Where(param).Where("created_at LIKE ?", fmt.Sprintf("%%%s%%", param.CreatedAt))
 
-	if err := c.db.Where(param).Where("created_at LIKE ?", fmt.Sprintf("%%%s%%", param.CreatedAt)).Find(&cart).Error; err != nil {
+	if param.CreatedAt != "" {
+		query = query.Where("created_at LIKE ?", fmt.Sprintf("%%%s%%", param.CreatedAt))
+	} else if !param.CreatedAtMoreThan.IsZero() {
+		query = query.Where("created_at > ?", param.CreatedAtMoreThan)
+	}
+
+	if err := query.Find(&cart).Error; err != nil {
 		return cart, err
 	}
 
@@ -51,6 +60,26 @@ func (c *cart) GetListInByID(ids []int64) ([]entity.Cart, error) {
 	carts := []entity.Cart{}
 
 	if err := c.db.Where(ids).Find(&carts).Error; err != nil {
+		return carts, err
+	}
+
+	return carts, nil
+}
+
+func (c *cart) GetListInByTransactionID(transaction_ids []uint) ([]entity.Cart, error) {
+	carts := []entity.Cart{}
+
+	if err := c.db.Where("transaction_id IN ?", transaction_ids).Find(&carts).Error; err != nil {
+		return carts, err
+	}
+
+	return carts, nil
+}
+
+func (c *cart) GetListInByStatus(status []string, param entity.CartParam) ([]entity.Cart, error) {
+	carts := []entity.Cart{}
+
+	if err := c.db.Where("status IN ?", status).Where(param).Find(&carts).Error; err != nil {
 		return carts, err
 	}
 

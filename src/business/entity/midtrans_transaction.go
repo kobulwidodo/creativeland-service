@@ -2,6 +2,7 @@ package entity
 
 import (
 	"go-clean/src/lib/midtrans"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -31,9 +32,16 @@ type PaymentData struct {
 }
 
 type MidtransTransactionParam struct {
-	ID            uint   `json:"id"`
-	TransactionID uint   `uri:"transaction_id" json:"transaction_id"`
-	OrderID       string `json:"order_id"`
+	ID                uint      `json:"id"`
+	TransactionID     uint      `uri:"transaction_id" json:"transaction_id"`
+	Status            string    `json:"status"`
+	CreatedAt         string    `json:"-" gorm:"-"`
+	CreatedAtMoreThan time.Time `json:"-" gorm:"-"`
+	OrderID           string    `json:"order_id"`
+	OrderIDLike       string    `json:"order_id_like" gorm:"-"`
+	Limit             int       `json:"-" gorm:"-"`
+	Offset            int       `json:"-" gorm:"-"`
+	OrderBy           string    `json:"-" gorm:"-"`
 }
 
 type MidtransTransactionPaymentDetail struct {
