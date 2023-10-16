@@ -33,6 +33,7 @@ func (u *umkm) Create(params entity.CreateUmkmParam) (entity.Umkm, error) {
 	umkm, err := u.umkm.Create(entity.Umkm{
 		Name:   params.Name,
 		Slogan: params.Slogan,
+		Status: entity.StatusClose,
 	})
 	if err != nil {
 		return umkm, err

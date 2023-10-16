@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	cartDom "go-clean/src/business/domain/cart"
+	umkmDom "go-clean/src/business/domain/umkm"
 	userDom "go-clean/src/business/domain/user"
 	"go-clean/src/business/entity"
 	"go-clean/src/lib/auth"
@@ -23,13 +24,15 @@ type user struct {
 	user userDom.Interface
 	auth auth.Interface
 	cart cartDom.Interface
+	umkm umkmDom.Interface
 }
 
-func Init(ad userDom.Interface, auth auth.Interface, cd cartDom.Interface) Interface {
+func Init(ad userDom.Interface, auth auth.Interface, cd cartDom.Interface, ud umkmDom.Interface) Interface {
 	a := &user{
 		user: ad,
 		auth: auth,
 		cart: cd,
+		umkm: ud,
 	}
 
 	return a
@@ -112,6 +115,16 @@ func (u *user) Me(ctx context.Context) (entity.User, error) {
 	})
 	if err != nil {
 		return me, err
+	}
+
+	if me.UmkmID != 0 {
+		umkm, err := u.umkm.Get(entity.UmkmParam{
+			ID: me.UmkmID,
+		})
+		if err != nil {
+			return me, err
+		}
+		me.UmkmStatus = umkm.Status
 	}
 
 	return me, nil

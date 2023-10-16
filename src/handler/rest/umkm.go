@@ -70,6 +70,7 @@ func (r *rest) GetUmkmByID(ctx *gin.Context) {
 // @Tags Umkm
 // @Produce json
 // @Param name query string false "name param"
+// @Param status query string false "status umkm" Enums(open, close)
 // @Success 200 {object} entity.Response{data=entity.Umkm{}}
 // @Failure 400 {object} entity.Response{}
 // @Failure 401 {object} entity.Response{}

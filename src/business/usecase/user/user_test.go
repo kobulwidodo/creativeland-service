@@ -37,7 +37,7 @@ func Test_user_Create(t *testing.T) {
 		Password: string(hashPass),
 	}
 
-	u := user.Init(userMock, nil, nil)
+	u := user.Init(userMock, nil, nil, nil)
 
 	type mockfields struct {
 		user *mock_user.MockInterface
@@ -120,7 +120,7 @@ func Test_user_Login(t *testing.T) {
 		Password: string(hashPass),
 	}
 
-	u := user.Init(userMock, authMock, nil)
+	u := user.Init(userMock, authMock, nil, nil)
 
 	type mockfields struct {
 		user *mock_user.MockInterface
@@ -233,7 +233,7 @@ func Test_user_Get(t *testing.T) {
 		Username: "username",
 	}
 
-	u := user.Init(userMock, nil, nil)
+	u := user.Init(userMock, nil, nil, nil)
 
 	type mockfields struct {
 		user *mock_user.MockInterface
@@ -297,7 +297,7 @@ func Test_user_GenerateGuestToken(t *testing.T) {
 	authMock := mock_auth.NewMockInterface(ctrl)
 	tokenMock := "token"
 
-	u := user.Init(nil, authMock, nil)
+	u := user.Init(nil, authMock, nil, nil)
 
 	type mockfields struct {
 		auth *mock_auth.MockInterface
@@ -350,7 +350,7 @@ func Test_user_Me(t *testing.T) {
 	authMock := mock_auth.NewMockInterface(ctrl)
 	userMock := mock_user.NewMockInterface(ctrl)
 
-	u := user.Init(userMock, authMock, nil)
+	u := user.Init(userMock, authMock, nil, nil)
 
 	mockAuthUserInfo := auth.UserAuthInfo{
 		User: auth.User{

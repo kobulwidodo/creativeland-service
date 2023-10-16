@@ -8,12 +8,13 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string
-	Password string `json:"-"`
-	Nama     string
-	IsAdmin  bool
-	UmkmID   uint
-	GuestID  string `json:"-" gorm:"-:all"`
+	Username   string
+	Password   string `json:"-"`
+	Nama       string
+	IsAdmin    bool
+	UmkmID     uint
+	GuestID    string `json:"-" gorm:"-:all"`
+	UmkmStatus string `gorm:"-:all"`
 }
 
 type UserParam struct {

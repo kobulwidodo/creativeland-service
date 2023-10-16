@@ -258,6 +258,8 @@ func (t *transaction) GetOrderDetail(ctx context.Context, param entity.Transacti
 func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error) {
 	result := []entity.TransactionDetailResponse{}
 
+	log.Println(param)
+
 	carts, err := t.cart.GetList(entity.CartParam{
 		UmkmID: param.UmkmID,
 		Status: param.Status,
@@ -307,6 +309,8 @@ func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity
 	for _, mt := range midtransTransactions {
 		midtransTransactionMap[mt.TransactionID] = mt
 	}
+
+	log.Println(len(midtransTransactionMap))
 
 	for _, t := range transactions {
 		if _, ok := midtransTransactionMap[t.ID]; ok {

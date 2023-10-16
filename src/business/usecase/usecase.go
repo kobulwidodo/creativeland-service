@@ -26,7 +26,7 @@ type Usecase struct {
 
 func Init(auth auth.Interface, d *domain.Domains) *Usecase {
 	uc := &Usecase{
-		User:                user.Init(d.User, auth, d.Cart),
+		User:                user.Init(d.User, auth, d.Cart, d.Umkm),
 		Umkm:                umkm.Init(d.Umkm),
 		Menu:                menu.Init(d.Menu),
 		Cart:                cart.Init(d.Cart, auth, d.Menu, d.Umkm),

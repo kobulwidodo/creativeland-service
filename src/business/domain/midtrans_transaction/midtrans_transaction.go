@@ -63,7 +63,7 @@ func (mt *midtransTransaction) GetList(param entity.MidtransTransactionParam) ([
 
 func (mt *midtransTransaction) GetListByTrxIDs(ids []uint, param entity.MidtransTransactionParam) ([]entity.MidtransTransaction, error) {
 	res := []entity.MidtransTransaction{}
-	if err := mt.db.Where("transaction_id IN ?", ids).Where("order_id LIKE ?", fmt.Sprintf("%%%s%%", param.OrderID)).Find(&res).Error; err != nil {
+	if err := mt.db.Where("transaction_id IN ? AND order_id LIKE ?", ids, fmt.Sprintf("%%%s%%", param.OrderIDLike)).Find(&res).Error; err != nil {
 		return res, err
 	}
 
