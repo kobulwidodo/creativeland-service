@@ -51,3 +51,31 @@ func (r *rest) HandleNotification(ctx *gin.Context) {
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully handle transaction", nil)
 }
+
+// @Summary Mark As Paid
+// @Description Mark a Transaction Status as Paid
+// @Security BearerAuth
+// @Tags Midtrans Transaction
+// @Produce json
+// @Param order_id path integer true "order_id id"
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/transaction/{order_id}/mark-as-paid [PUT]
+func (r *rest) MarkAsPaid(ctx *gin.Context) {
+	var param entity.MidtransTransactionParam
+	if err := ctx.ShouldBindUri(&param); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err := r.uc.MidtransTransaction.MarkAsPaid(param)
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully mark as paid", nil)
+}

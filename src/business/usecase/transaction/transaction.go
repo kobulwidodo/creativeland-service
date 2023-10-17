@@ -106,18 +106,24 @@ func (t *transaction) Create(ctx context.Context, param entity.CreateTransaction
 		return 0, err
 	}
 
-	coreApiRes, err := t.midtrans.Create(midtrans.CreateOrderParam{
-		OrderID:      transaction.ID,
-		PaymentID:    param.PaymentID,
-		GrossAmount:  int64(grossAmount),
-		ItemsDetails: t.convertToItemsDetails(carts, menusMap),
-		CustomerDetails: midtrans.CustomerDetails{
-			Name:  param.BuyerName,
-			Email: param.Email,
-		},
-	})
-	if err != nil {
-		return 0, err
+	coreApiRes := &coreapi.ChargeResponse{}
+	if param.PaymentID == midtrans.Cash {
+		coreApiRes.TransactionID = "0"
+		coreApiRes.OrderID = fmt.Sprintf("%s-%d-%d", "CL", transaction.ID, time.Now().Unix())
+	} else {
+		coreApiRes, err = t.midtrans.Create(midtrans.CreateOrderParam{
+			OrderID:      transaction.ID,
+			PaymentID:    param.PaymentID,
+			GrossAmount:  int64(grossAmount),
+			ItemsDetails: t.convertToItemsDetails(carts, menusMap),
+			CustomerDetails: midtrans.CustomerDetails{
+				Name:  param.BuyerName,
+				Email: param.Email,
+			},
+		})
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	paymentData, err := t.getPaymentData(param.PaymentID, coreApiRes)
@@ -161,6 +167,8 @@ func (t *transaction) getPaymentData(paymentId int, coreApiRes *coreapi.ChargeRe
 	if paymentId == midtrans.GopayPayment {
 		paymentData.Key = coreApiRes.Actions[1].URL
 		paymentData.Qr = coreApiRes.Actions[0].URL
+	} else if paymentId == midtrans.Cash {
+		return paymentData, nil
 	} else {
 		return paymentData, errors.New("failed to get payment data")
 	}

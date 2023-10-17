@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	GopayPayment = 1
+	Cash         = 1
+	GopayPayment = 2
 )
 
 type CreateOrderParam struct {

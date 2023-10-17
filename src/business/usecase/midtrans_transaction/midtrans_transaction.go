@@ -7,12 +7,12 @@ import (
 	midtransDom "go-clean/src/business/domain/midtrans"
 	midtransTransactionDom "go-clean/src/business/domain/midtrans_transaction"
 	"go-clean/src/business/entity"
-	"log"
 )
 
 type Interface interface {
 	GetPaymentDetail(param entity.MidtransTransactionParam) (entity.MidtransTransactionPaymentDetail, error)
 	HandleNotification(payload map[string]interface{}) error
+	MarkAsPaid(param entity.MidtransTransactionParam) error
 }
 
 type midtransTransaction struct {
@@ -97,11 +97,6 @@ func (mtt *midtransTransaction) HandleNotification(payload map[string]interface{
 			status = entity.StatusPending
 		}
 	}
-	log.Println(status)
-	log.Println(orderId)
-	log.Printf("%#v\n", midtransTransaction)
-	log.Printf("%d\n", midtransTransaction.ID)
-	log.Printf("%d\n", midtransTransaction.TransactionID)
 
 	if err := mtt.midtransTransaction.Update(entity.MidtransTransactionParam{
 		ID: midtransTransaction.ID,
@@ -120,6 +115,34 @@ func (mtt *midtransTransaction) HandleNotification(payload map[string]interface{
 		}); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (mtt *midtransTransaction) MarkAsPaid(param entity.MidtransTransactionParam) error {
+	midtransTransaction, err := mtt.midtransTransaction.Get(entity.MidtransTransactionParam{
+		OrderID: param.OrderID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := mtt.midtransTransaction.Update(entity.MidtransTransactionParam{
+		ID: midtransTransaction.ID,
+	}, entity.UpdateMidtransTransactionParam{
+		Status: entity.StatusSuccess,
+	}); err != nil {
+		return err
+	}
+
+	if err := mtt.cart.Update(entity.CartParam{
+		Status:        entity.StatusUnpaid,
+		TransactionID: midtransTransaction.TransactionID,
+	}, entity.UpdateCartParam{
+		Status: entity.StatusPaid,
+	}); err != nil {
+		return err
 	}
 
 	return nil

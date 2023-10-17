@@ -166,6 +166,7 @@ func (r *rest) Register() {
 	transaction.GET("/:transaction_id", r.GetOrderDetail)
 	transaction.GET("/me", r.VerifyUser, r.GetMyTransaction)
 	umkm.PUT("/:umkm_id/transaction/:transaction_id/mark-as-done", r.VerifyUser, r.VerifyUmkm, r.CompleteOrder)
+	admin.PUT("/transaction/:order_id/mark-as-paid", r.VerifyUser, r.VerifyAdmin, r.MarkAsPaid)
 
 	midtransTransaction := v1.Group("/midtrans-transaction")
 	midtransTransaction.POST("/handle", r.HandleNotification)

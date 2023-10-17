@@ -37,7 +37,7 @@ type MidtransTransactionParam struct {
 	Status            string    `json:"status"`
 	CreatedAt         string    `json:"-" gorm:"-"`
 	CreatedAtMoreThan time.Time `json:"-" gorm:"-"`
-	OrderID           string    `json:"order_id"`
+	OrderID           string    `uri:"order_id" json:"order_id"`
 	OrderIDLike       string    `json:"order_id_like" gorm:"-"`
 	Limit             int       `json:"-" gorm:"-"`
 	Offset            int       `json:"-" gorm:"-"`
@@ -58,6 +58,8 @@ func (mt *MidtransTransaction) GetPaymentType() string {
 	result := ""
 
 	switch mt.PaymentType {
+	case midtrans.Cash:
+		result = "Cash"
 	case midtrans.GopayPayment:
 		result = "Gopay"
 	}

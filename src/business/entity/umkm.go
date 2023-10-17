@@ -10,9 +10,11 @@ const (
 
 type Umkm struct {
 	gorm.Model
-	Name   string
-	Slogan string
-	Status string
+	Name             string
+	Slogan           string
+	Status           string
+	OwnerName        string
+	OwnerPhoneNumber string
 }
 
 type UmkmParam struct {
@@ -23,12 +25,16 @@ type UmkmParam struct {
 }
 
 type CreateUmkmParam struct {
-	Name   string `binding:"required"`
-	Slogan string `binding:"required"`
+	Name             string `binding:"required"`
+	Slogan           string `binding:"required"`
+	OwnerName        string `binding:"required"`
+	OwnerPhoneNumber string `binding:"required"`
 }
 
 type UpdateUmkmParam struct {
-	Name   string
-	Slogan string
-	Status string
+	Name             string
+	Slogan           string
+	Status           string
+	OwnerName        string
+	OwnerPhoneNumber string
 }
