@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/midtrans/midtrans-go/coreapi"
+	"github.com/xuri/excelize/v2"
 )
 
 type Interface interface {
@@ -30,7 +31,9 @@ type Interface interface {
 	GetTransactionList(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error)
 	GetMyTransaction(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error)
 	GetRecapSalesList(ctx context.Context, param entity.TransactionParam) ([]entity.SalesRecapResponse, error)
+	GenerateExcel(ctx context.Context, param entity.TransactionParam) (*excelize.File, string, error)
 	CompleteOrder(ctx context.Context, param entity.TransactionParam) error
+	CancelOrder(ctx context.Context, param entity.TransactionParam) error
 }
 
 type transaction struct {
@@ -266,11 +269,8 @@ func (t *transaction) GetOrderDetail(ctx context.Context, param entity.Transacti
 func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity.TransactionParam) ([]entity.TransactionDetailResponse, error) {
 	result := []entity.TransactionDetailResponse{}
 
-	log.Println(param)
-
-	carts, err := t.cart.GetList(entity.CartParam{
+	carts, err := t.cart.GetListInByStatus(param.Statuses, entity.CartParam{
 		UmkmID: param.UmkmID,
-		Status: param.Status,
 	})
 	if err != nil {
 		return result, err
@@ -535,14 +535,16 @@ func (t *transaction) GetMyTransaction(ctx context.Context, param entity.Transac
 
 	for _, t := range transactions {
 		if _, ok := midtransTransactionMap[t.ID]; ok {
+			mt := midtransTransactionMap[t.ID]
 			transactionDetail := entity.TransactionDetailResponse{
 				ID:              t.ID,
 				BuyerName:       t.BuyerName,
 				Seat:            t.Seat,
 				Notes:           t.Notes,
 				Price:           t.Price,
-				Status:          midtransTransactionMap[t.ID].Status,
-				MidtransOrderID: midtransTransactionMap[t.ID].OrderID,
+				Status:          mt.Status,
+				MidtransOrderID: mt.OrderID,
+				PaymentType:     mt.GetPaymentType(),
 				CreatedAt:       timeutils.DiffForHumans(t.CreatedAt),
 			}
 			itemMenus := []entity.ItemMenu{}
@@ -576,6 +578,90 @@ func (t *transaction) GetMyTransaction(ctx context.Context, param entity.Transac
 	return result, nil
 }
 
+func (t *transaction) GenerateExcel(ctx context.Context, param entity.TransactionParam) (*excelize.File, string, error) {
+	recap := []entity.SalesRecapResponse{}
+
+	carts, err := t.cart.GetList(entity.CartParam{
+		Status:    entity.StatusDone,
+		CreatedAt: param.Date,
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	if len(carts) == 0 {
+		return nil, "", err
+	}
+
+	layout := "2006-01"
+	timeFormat, err := time.Parse(layout, param.Date)
+	if err != nil {
+		return nil, "", err
+	}
+
+	startDate := time.Date(timeFormat.Year(), timeFormat.Month(), 1, 0, 0, 0, 0, timeFormat.Location())
+	endDate := startDate.AddDate(0, 1, -1)
+
+	dateTrxMap := make(map[string]entity.SalesRecapResponse)
+	for d := startDate; !d.After(endDate); d = d.AddDate(0, 0, 1) {
+		dateFormatted := d.Format("2006-01-02")
+		dateTrxMap[dateFormatted] = entity.SalesRecapResponse{
+			Date:        dateFormatted,
+			GrossAmount: 0,
+			NetAmount:   0,
+		}
+	}
+
+	for _, c := range carts {
+		dateFormetted := c.CreatedAt.Format("2006-01-02")
+		dateTrxMap[dateFormetted] = entity.SalesRecapResponse{
+			Date:        dateFormetted,
+			GrossAmount: c.TotalPrice,
+			NetAmount:   c.TotalPrice * 17 / 100,
+		}
+	}
+
+	for _, v := range dateTrxMap {
+		recap = append(recap, v)
+	}
+
+	sort.Slice(recap, func(i, j int) bool {
+		return recap[i].Date < recap[j].Date
+	})
+
+	f := excelize.NewFile()
+	sheetname := fmt.Sprintf("%s-%d", param.Date, time.Now().Unix())
+	index, err := f.NewSheet(sheetname)
+	if err != nil {
+		return nil, "", err
+	}
+
+	f.SetCellValue(sheetname, "A1", fmt.Sprintf("Recap Transaksi Bulan : %s", param.Date))
+	f.SetCellValue(sheetname, "A2", "Tanggal")
+	f.SetCellValue(sheetname, "B2", "Pendapatan Kotor")
+	f.SetCellValue(sheetname, "C2", "Pendapatan Bersih")
+
+	cellIndex := 0
+	sumNet := 0
+	sumGross := 0
+	for i, r := range recap {
+		cellIndex = i + 3
+		f.SetCellValue(sheetname, fmt.Sprintf("A%d", cellIndex), r.Date)
+		f.SetCellValue(sheetname, fmt.Sprintf("B%d", cellIndex), r.GrossAmount)
+		f.SetCellValue(sheetname, fmt.Sprintf("C%d", cellIndex), r.NetAmount)
+		sumNet += r.NetAmount
+		sumGross += r.GrossAmount
+	}
+
+	f.SetCellValue(sheetname, fmt.Sprintf("A%d", cellIndex), "TOTAL")
+	f.SetCellValue(sheetname, fmt.Sprintf("B%d", cellIndex), sumGross)
+	f.SetCellValue(sheetname, fmt.Sprintf("C%d", cellIndex), sumNet)
+
+	f.SetActiveSheet(index)
+
+	return f, sheetname, nil
+}
+
 func (t *transaction) GetRecapSalesList(ctx context.Context, param entity.TransactionParam) ([]entity.SalesRecapResponse, error) {
 	result := []entity.SalesRecapResponse{}
 
@@ -591,10 +677,6 @@ func (t *transaction) GetRecapSalesList(ctx context.Context, param entity.Transa
 		return result, err
 	}
 
-	if len(carts) == 0 {
-		return result, nil
-	}
-
 	umkms, err := t.umkm.GetList(entity.UmkmParam{})
 	if err != nil {
 		return result, err
@@ -607,52 +689,54 @@ func (t *transaction) GetRecapSalesList(ctx context.Context, param entity.Transa
 
 	dateTrxMap := make(map[string]entity.SalesRecapResponse)
 
+	var startDate, endDate time.Time
+
+	if param.Date != "" {
+		// Only one date is specified.
+		parsedDate, err := time.Parse("2006-01-02", param.Date)
+		if err != nil {
+			return nil, err // handle error
+		}
+		startDate = parsedDate
+		endDate = parsedDate
+	} else {
+		// Last seven days range is specified.
+		startDate = calcLastSevenDays
+		endDate = now
+	}
+
+	for d := startDate; !d.After(endDate); d = d.AddDate(0, 0, 1) {
+		dateFormatted := d.Format("2006-01-02")
+		dateTrxMap[dateFormatted] = entity.SalesRecapResponse{
+			Date:        dateFormatted,
+			GrossAmount: 0,
+			NetAmount:   0,
+			UmkmDetail:  []entity.UmkmDetailRecap{},
+		}
+	}
+
 	umkmRecapMap := make(map[entity.KeyUmkmDetailRecap]entity.UmkmDetailRecap)
 	for _, c := range carts {
-		dateFormetted := c.CreatedAt.Format("2006-01-02")
-		if _, ok := dateTrxMap[dateFormetted]; ok {
-			recap := dateTrxMap[dateFormetted]
-			recap.NetAmount += c.TotalPrice * 17 / 100
-			recap.GrossAmount += c.TotalPrice
-			dateTrxMap[dateFormetted] = recap
-			if _, ok := umkmRecapMap[entity.KeyUmkmDetailRecap{
-				ID:          c.UmkmID,
-				CreatedDate: dateFormetted,
-			}]; ok {
-				recap := umkmRecapMap[entity.KeyUmkmDetailRecap{
-					ID:          c.UmkmID,
-					CreatedDate: dateFormetted,
-				}]
-				recap.GrossAmount += c.TotalPrice
-				recap.NetAmount += c.TotalPrice * 83 / 100
-				recap.TotalOrder += c.Amount
-				umkmRecapMap[entity.KeyUmkmDetailRecap{
-					ID:          c.UmkmID,
-					CreatedDate: dateFormetted,
-				}] = recap
-			} else {
-				umkmRecapMap[entity.KeyUmkmDetailRecap{
-					ID:          c.UmkmID,
-					CreatedDate: dateFormetted,
-				}] = entity.UmkmDetailRecap{
-					ID:          c.UmkmID,
-					UmkmName:    umkmsMap[c.UmkmID].Name,
-					GrossAmount: c.TotalPrice,
-					NetAmount:   c.TotalPrice * 83 / 100,
-					TotalOrder:  c.Amount,
-				}
-			}
+		dateFormatted := c.CreatedAt.Format("2006-01-02")
+
+		// Update sales recap for the date
+		recap := dateTrxMap[dateFormatted]
+		recap.NetAmount += c.TotalPrice * 17 / 100
+		recap.GrossAmount += c.TotalPrice
+		dateTrxMap[dateFormatted] = recap
+
+		// Handle Umkm details
+		key := entity.KeyUmkmDetailRecap{
+			ID:          c.UmkmID,
+			CreatedDate: dateFormatted,
+		}
+		if uRecap, ok := umkmRecapMap[key]; ok {
+			uRecap.GrossAmount += c.TotalPrice
+			uRecap.NetAmount += c.TotalPrice * 83 / 100
+			uRecap.TotalOrder += c.Amount
+			umkmRecapMap[key] = uRecap
 		} else {
-			fmt.Println(c.UmkmID)
-			dateTrxMap[dateFormetted] = entity.SalesRecapResponse{
-				Date:        dateFormetted,
-				NetAmount:   c.TotalPrice * 17 / 100,
-				GrossAmount: c.TotalPrice,
-			}
-			umkmRecapMap[entity.KeyUmkmDetailRecap{
-				ID:          c.UmkmID,
-				CreatedDate: dateFormetted,
-			}] = entity.UmkmDetailRecap{
+			umkmRecapMap[key] = entity.UmkmDetailRecap{
 				ID:          c.UmkmID,
 				UmkmName:    umkmsMap[c.UmkmID].Name,
 				GrossAmount: c.TotalPrice,
@@ -698,6 +782,29 @@ func (t *transaction) CompleteOrder(ctx context.Context, param entity.Transactio
 
 	if err := t.cart.UpdatesByIDs(cartsID, entity.UpdateCartParam{
 		Status: entity.StatusDone,
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *transaction) CancelOrder(ctx context.Context, param entity.TransactionParam) error {
+	carts, err := t.cart.GetList(entity.CartParam{
+		TransactionID: param.ID,
+		UmkmID:        param.UmkmID,
+	})
+	if err != nil {
+		return err
+	}
+
+	cartsID := []uint{}
+	for _, c := range carts {
+		cartsID = append(cartsID, c.ID)
+	}
+
+	if err := t.cart.UpdatesByIDs(cartsID, entity.UpdateCartParam{
+		Status: entity.StatusCancel,
 	}); err != nil {
 		return err
 	}

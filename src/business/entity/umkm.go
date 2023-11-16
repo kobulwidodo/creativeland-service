@@ -25,16 +25,16 @@ type UmkmParam struct {
 }
 
 type CreateUmkmParam struct {
-	Name             string `binding:"required"`
-	Slogan           string `binding:"required"`
-	OwnerName        string `binding:"required"`
-	OwnerPhoneNumber string `binding:"required"`
+	Name             string `binding:"required" json:"name"`
+	Slogan           string `binding:"required" json:"slogan"`
+	OwnerName        string `binding:"required" json:"owner_name"`
+	OwnerPhoneNumber string `binding:"required" json:"owner_phone_number"`
 }
 
 type UpdateUmkmParam struct {
-	Name             string
-	Slogan           string
-	Status           string
-	OwnerName        string
-	OwnerPhoneNumber string
+	Name             string `json:"name"`
+	Slogan           string `json:"slogan"`
+	Status           string `json:"status"`
+	OwnerName        string `json:"owner_name"`
+	OwnerPhoneNumber string `json:"owner_phone_number"`
 }

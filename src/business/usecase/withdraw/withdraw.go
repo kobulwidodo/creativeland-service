@@ -11,6 +11,7 @@ import (
 type Interface interface {
 	Create(ctx context.Context, param entity.CreateWithdrawParam) (entity.Withdraw, error)
 	GetList(ctx context.Context, param entity.WithdrawParam) ([]entity.Withdraw, error)
+	Update(ctx context.Context, param entity.WithdrawParam, inputParam entity.UpdateWithdrawParam) error
 }
 
 type withdraw struct {
@@ -27,26 +28,12 @@ func Init(wd withdrawDom.Interface, ud umkmDom.Interface) Interface {
 }
 
 func (w *withdraw) Create(ctx context.Context, param entity.CreateWithdrawParam) (entity.Withdraw, error) {
-	wdExist, err := w.withdraw.Get(entity.WithdrawParam{
-		Date:   param.Date,
-		UmkmID: param.UmkmID,
-	})
-	if err == nil {
-		if err := w.withdraw.Update(entity.WithdrawParam{
-			Date:   param.Date,
-			UmkmID: param.UmkmID,
-		}, entity.UpdateWithdrawParam{
-			Amount: wdExist.Amount + param.Amount,
-		}); err != nil {
-			return wdExist, err
-		}
-		return wdExist, nil
-	}
-
 	wd, err := w.withdraw.Create(entity.Withdraw{
 		Date:   param.Date,
 		Amount: param.Amount,
 		UmkmID: param.UmkmID,
+		Status: param.Status,
+		Method: param.Method,
 	})
 	if err != nil {
 		return wd, err
@@ -86,4 +73,19 @@ func (w *withdraw) GetList(ctx context.Context, param entity.WithdrawParam) ([]e
 	})
 
 	return wds, nil
+}
+
+func (w *withdraw) Update(ctx context.Context, param entity.WithdrawParam, inputParam entity.UpdateWithdrawParam) error {
+	wd, err := w.withdraw.Get(entity.WithdrawParam{
+		ID: param.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := w.withdraw.Update(entity.WithdrawParam{ID: wd.ID}, inputParam); err != nil {
+		return err
+	}
+
+	return nil
 }

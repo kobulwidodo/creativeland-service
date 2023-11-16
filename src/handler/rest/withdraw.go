@@ -64,3 +64,38 @@ func (r *rest) CreateWithdraw(ctx *gin.Context) {
 
 	r.httpRespSuccess(ctx, http.StatusCreated, "successfully created new withdraw", withdraw)
 }
+
+// @Summary Update Withdraw
+// @Description Update a Withdraw
+// @Security BearerAuth
+// @Tags Withdraw
+// @Param withdraw_id path integer true "withdraw id"
+// @Param withdraw body entity.UpdateWithdrawParam true "withdraw info"
+// @Produce json
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/admin/withdraw/{withdraw_id} [PUT]
+func (r *rest) UpdateWithdraw(ctx *gin.Context) {
+	var updateParam entity.UpdateWithdrawParam
+	if err := ctx.ShouldBindJSON(&updateParam); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	var selectParam entity.WithdrawParam
+	if err := ctx.ShouldBindUri(&selectParam); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err := r.uc.Withdraw.Update(ctx.Request.Context(), selectParam, updateParam)
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusCreated, "successfully update withdraw", nil)
+}

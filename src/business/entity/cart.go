@@ -11,6 +11,7 @@ const (
 	StatusUnpaid = "unpaid"
 	StatusPaid   = "paid"
 	StatusDone   = "done"
+	StatusCancel = "cancel"
 )
 
 type Cart struct {

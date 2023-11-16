@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"go-clean/src/business/entity"
 	"net/http"
 
@@ -68,7 +69,7 @@ func (r *rest) GetOrderDetail(ctx *gin.Context) {
 // @Security BearerAuth
 // @Tags Transaction
 // @Param umkm_id path integer true "umkm id"
-// @Param status query string false "status" Enums(in_cart, unpaid, paid, done)
+// @Param statuses query []string false "statuses" collectionFormat(multi)
 // @Param order_id query string false "order_id"
 // @Produce json
 // @Success 200 {object} entity.Response{data=entity.TransactionDetailResponse}
@@ -211,4 +212,67 @@ func (r *rest) CompleteOrder(ctx *gin.Context) {
 	}
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully mark as done", nil)
+}
+
+// @Summary Cancel Order
+// @Description Cancel an Order
+// @Security BearerAuth
+// @Tags Transaction
+// @Param umkm_id path integer true "umkm id"
+// @Param transaction_id path integer true "transaction id"
+// @Produce json
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/umkm/{umkm_id}/transaction/{transaction_id}/cancel-order [PUT]
+func (r *rest) CancelOrder(ctx *gin.Context) {
+	var param entity.TransactionParam
+	if err := ctx.ShouldBindUri(&param); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err := r.uc.Transaction.CancelOrder(ctx.Request.Context(), param)
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully cancel an order", nil)
+}
+
+// @Summary Download Recap
+// @Description Download Monthly Recap
+// @Security BearerAuth
+// @Tags Transaction
+// @Param date query string true "date"
+// @Produce json
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/admin/transactions/recap/download [GET]
+func (r *rest) DownloadMonthlyRecap(ctx *gin.Context) {
+	var param entity.TransactionParam
+	if err := ctx.ShouldBindQuery(&param); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	f, filename, err := r.uc.Transaction.GenerateExcel(ctx.Request.Context(), param)
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s.xlsx", filename))
+	ctx.Writer.WriteHeader(http.StatusOK)
+	if err := f.Write(ctx.Writer); err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
 }

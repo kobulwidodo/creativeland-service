@@ -111,3 +111,24 @@ func (r *rest) DeleteItemCart(ctx *gin.Context) {
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully delete an item on cart", nil)
 }
+
+// @Summary Clear Cart
+// @Description Clear all cart
+// @Security BearerAuth
+// @Tags Cart
+// @Produce json
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/cart/{cart_id} [DELETE]
+func (r *rest) ClearCart(ctx *gin.Context) {
+	err := r.uc.Cart.ClearCart(ctx.Request.Context())
+	if err != nil {
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully delete an item on cart", nil)
+}

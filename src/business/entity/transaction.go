@@ -20,15 +20,16 @@ type CreateTransactionParam struct {
 }
 
 type TransactionParam struct {
-	ID              uint   `uri:"transaction_id" json:"id"`
-	Date            string `form:"date"`
-	UmkmID          uint   `uri:"umkm_id"`
-	Status          string `form:"status"`
-	MidtransOrderID string `form:"order_id"`
-	Page            int    `form:"page" json:"-" gorm:"-"`
-	Limit           int    `form:"limit" json:"-" gorm:"-"`
-	Offset          int    `json:"-" gorm:"-"`
-	OrderBy         string `json:"-" gorm:"-"`
+	ID              uint     `uri:"transaction_id" json:"id"`
+	Date            string   `form:"date"`
+	UmkmID          uint     `uri:"umkm_id"`
+	Status          string   `form:"status"`
+	Statuses        []string `form:"statuses"`
+	MidtransOrderID string   `form:"order_id"`
+	Page            int      `form:"page" json:"-" gorm:"-"`
+	Limit           int      `form:"limit" json:"-" gorm:"-"`
+	Offset          int      `json:"-" gorm:"-"`
+	OrderBy         string   `json:"-" gorm:"-"`
 }
 
 type TransactionDetailResponse struct {

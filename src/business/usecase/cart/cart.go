@@ -17,6 +17,7 @@ type Interface interface {
 	Delete(ctx context.Context, param entity.CartParam) error
 	ValidateCart(ctx context.Context, cartId uint, guestId string) error
 	GetCartCount(ctx context.Context) (int, error)
+	ClearCart(ctx context.Context) error
 }
 
 type cart struct {
@@ -241,4 +242,19 @@ func (c *cart) GetCartCount(ctx context.Context) (int, error) {
 	}
 
 	return result, nil
+}
+
+func (c *cart) ClearCart(ctx context.Context) error {
+	user, err := c.auth.GetUserAuthInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := c.cart.Delete(entity.CartParam{
+		GuestID: user.User.GuestID,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
