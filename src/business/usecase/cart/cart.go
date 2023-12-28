@@ -52,6 +52,10 @@ func (c *cart) Create(ctx context.Context, params entity.CreateCartParam) (entit
 		return entity.Cart{}, err
 	}
 
+	if !*menu.IsReady {
+		return entity.Cart{}, errors.New("menu tidak tersedia")
+	}
+
 	cartExist, _ := c.cart.Get(entity.CartParam{
 		GuestID: user.User.GuestID,
 		UmkmID:  params.UmkmID,

@@ -36,3 +36,6 @@ docs/swagger
 # Local specific files
 .DS_Store
 .vscode
+
+# assets
+public/assets

@@ -8,6 +8,8 @@ type Menu struct {
 	Description string
 	Price       int
 	UmkmID      uint
+	IsReady     *bool
+	ImgPath     string
 }
 
 type MenuParam struct {
@@ -26,4 +28,6 @@ type UpdateMenuParam struct {
 	Name        string
 	Description string
 	Price       int
+	IsReady     *bool  `json:"is_ready"`
+	ImgPath     string `json:"img_path"`
 }

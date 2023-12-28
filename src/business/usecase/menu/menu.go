@@ -15,6 +15,7 @@ type Interface interface {
 	Update(param entity.MenuParam, inputParam entity.UpdateMenuParam) error
 	Delete(param entity.MenuParam) error
 	ValidateMenu(ctx context.Context, menuID uint, user auth.UserAuthInfo) error
+	SaveImage(ctx context.Context, param entity.MenuParam, fileLocation string) error
 }
 
 type menu struct {
@@ -30,11 +31,13 @@ func Init(md menuDom.Interface) Interface {
 }
 
 func (m *menu) Create(inputParam entity.CreateMenuParam, menuParam entity.MenuParam) (entity.Menu, error) {
+	isReady := true
 	menu, err := m.menu.Create(entity.Menu{
 		Name:        inputParam.Name,
 		Description: inputParam.Description,
 		Price:       inputParam.Price,
 		UmkmID:      menuParam.UmkmID,
+		IsReady:     &isReady,
 	})
 	if err != nil {
 		return menu, err
@@ -98,6 +101,25 @@ func (m *menu) ValidateMenu(ctx context.Context, menuID uint, user auth.UserAuth
 
 	if !user.User.IsAdmin && menu.UmkmID != user.User.UmkmID {
 		return errors.New("unauthorized")
+	}
+
+	return nil
+}
+
+func (m *menu) SaveImage(ctx context.Context, param entity.MenuParam, fileLocation string) error {
+	menu, err := m.menu.Get(entity.MenuParam{
+		ID: param.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := m.menu.Update(entity.MenuParam{
+		ID: menu.ID,
+	}, entity.UpdateMenuParam{
+		ImgPath: fileLocation,
+	}); err != nil {
+		return err
 	}
 
 	return nil

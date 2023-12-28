@@ -4,11 +4,12 @@ import "gorm.io/gorm"
 
 type Transaction struct {
 	gorm.Model
-	GuestID   string
-	BuyerName string
-	Seat      string
-	Notes     string
-	Price     int
+	GuestID    string
+	BuyerName  string
+	Seat       string
+	Notes      string
+	Price      int
+	IsRefunded bool
 }
 
 type CreateTransactionParam struct {
@@ -24,7 +25,7 @@ type TransactionParam struct {
 	Date            string   `form:"date"`
 	UmkmID          uint     `uri:"umkm_id"`
 	Status          string   `form:"status"`
-	Statuses        []string `form:"statuses"`
+	Statuses        []string `form:"statuses" gorm:"-"`
 	MidtransOrderID string   `form:"order_id"`
 	Page            int      `form:"page" json:"-" gorm:"-"`
 	Limit           int      `form:"limit" json:"-" gorm:"-"`
@@ -53,6 +54,7 @@ type ItemMenu struct {
 	Price        int    `json:"price"`
 	Qty          int    `json:"qty"`
 	PricePerItem int    `json:"price_per_item"`
+	ImgPath      string `json:"img_path"`
 }
 
 type SalesRecapResponse struct {

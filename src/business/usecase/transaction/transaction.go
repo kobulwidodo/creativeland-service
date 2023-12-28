@@ -259,6 +259,7 @@ func (t *transaction) GetOrderDetail(ctx context.Context, param entity.Transacti
 			Price:        c.TotalPrice,
 			Qty:          c.Amount,
 			PricePerItem: c.PricePerItem,
+			ImgPath:      menuMap[c.MenuID].ImgPath,
 		}
 		result.ItemMenus = append(result.ItemMenus, itemMenu)
 	}
@@ -345,6 +346,10 @@ func (t *transaction) GetTransactionListByUmkm(ctx context.Context, param entity
 			result = append(result, transactionDetail)
 		}
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID > result[j].ID
+	})
 
 	return result, nil
 }
@@ -459,7 +464,7 @@ func (t *transaction) GetMyTransaction(ctx context.Context, param entity.Transac
 		return result, err
 	}
 
-	carts, err := t.cart.GetListInByStatus([]string{entity.StatusPaid, entity.StatusUnpaid, entity.StatusDone}, entity.CartParam{
+	carts, err := t.cart.GetListInByStatus([]string{entity.StatusPaid, entity.StatusUnpaid, entity.StatusDone, entity.StatusCancel}, entity.CartParam{
 		GuestID: user.User.GuestID,
 	})
 	if err != nil {
@@ -558,12 +563,13 @@ func (t *transaction) GetMyTransaction(ctx context.Context, param entity.Transac
 					PricePerItem: cm.PricePerItem,
 				})
 			}
-			if transactionDetail.Status == entity.StatusUnpaid {
+			if transactionDetail.Status == entity.StatusPending {
 				paymentData := entity.PaymentData{}
 				if err := json.Unmarshal([]byte(midtransTransactionMap[t.ID].PaymentData), &paymentData); err != nil {
 					log.Println("failed to un marshal payment data")
 					continue
 				}
+				log.Println(paymentData)
 				transactionDetail.PaymentData = paymentData
 			}
 			transactionDetail.ItemMenus = itemMenus

@@ -1,8 +1,11 @@
 package rest
 
 import (
+	"fmt"
 	"go-clean/src/business/entity"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -154,4 +157,48 @@ func (r *rest) DeleteUmkm(ctx *gin.Context) {
 	}
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully delete umkm", nil)
+}
+
+// @Summary Upload Umkm Image
+// @Description Upload Umkm Image
+// @Security BearerAuth
+// @Tags Umkm
+// @Accept multipart/form-data
+// @Produce json
+// @Param umkm_id path integer true "umkm id"
+// @Param file formData file true "Upload file"
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/umkm/{umkm_id}/upload-image [POST]
+func (r *rest) UploadImageUmkm(ctx *gin.Context) {
+	var selectParam entity.UmkmParam
+	if err := ctx.ShouldBindUri(&selectParam); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	path := fmt.Sprintf("public/assets/umkm/%d-%s-%d", selectParam.ID, file.Filename, time.Now().Unix())
+
+	if err := ctx.SaveUploadedFile(file, path); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err = r.uc.Umkm.SaveImage(ctx.Request.Context(), selectParam, path)
+	if err != nil {
+		os.Remove(path)
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully update tenant's image", nil)
 }

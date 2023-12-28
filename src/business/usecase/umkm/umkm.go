@@ -15,6 +15,7 @@ type Interface interface {
 	Update(param entity.UmkmParam, inputParam entity.UpdateUmkmParam) error
 	Delete(param entity.UmkmParam) error
 	ValidateUmkm(ctx context.Context, umkmId uint, user auth.UserAuthInfo) error
+	SaveImage(ctx context.Context, param entity.UmkmParam, fileLocation string) error
 }
 
 type umkm struct {
@@ -90,6 +91,23 @@ func (u *umkm) ValidateUmkm(ctx context.Context, umkmId uint, user auth.UserAuth
 
 	if umkmId != user.User.UmkmID && !user.User.IsAdmin {
 		return errors.New("unauthorized")
+	}
+
+	return nil
+}
+
+func (u *umkm) SaveImage(ctx context.Context, param entity.UmkmParam, fileLocation string) error {
+	umkm, err := u.umkm.Get(entity.UmkmParam{
+		ID: param.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := u.umkm.Update(entity.UmkmParam{ID: umkm.ID}, entity.UpdateUmkmParam{
+		ImgPath: fileLocation,
+	}); err != nil {
+		return err
 	}
 
 	return nil

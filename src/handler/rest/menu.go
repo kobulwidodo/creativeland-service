@@ -1,10 +1,11 @@
 package rest
 
 import (
+	"fmt"
 	"go-clean/src/business/entity"
-	"log"
 	"net/http"
-	"reflect"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -122,8 +123,6 @@ func (r *rest) UpdateMenu(ctx *gin.Context) {
 		return
 	}
 
-	log.Printf("%s\n", reflect.TypeOf(updateParam.Price))
-
 	var selectParam entity.MenuParam
 	if err := ctx.ShouldBindUri(&selectParam); err != nil {
 		r.httpRespError(ctx, http.StatusBadRequest, err)
@@ -165,4 +164,48 @@ func (r *rest) DeleteMenu(ctx *gin.Context) {
 	}
 
 	r.httpRespSuccess(ctx, http.StatusOK, "successfully delete menu", nil)
+}
+
+// @Summary Upload Menu Image
+// @Description Upload Menu Image
+// @Security BearerAuth
+// @Tags Menu
+// @Accept multipart/form-data
+// @Produce json
+// @Param menu_id path integer true "menu id"
+// @Param file formData file true "Upload file"
+// @Success 200 {object} entity.Response{}
+// @Failure 400 {object} entity.Response{}
+// @Failure 401 {object} entity.Response{}
+// @Failure 404 {object} entity.Response{}
+// @Failure 500 {object} entity.Response{}
+// @Router /api/v1/umkm/{umkm_id}/menu/{menu_id}/upload-image [POST]
+func (r *rest) UploadImageMenu(ctx *gin.Context) {
+	var selectParam entity.MenuParam
+	if err := ctx.ShouldBindUri(&selectParam); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	path := fmt.Sprintf("public/assets/menu/%d-%s-%d", selectParam.ID, file.Filename, time.Now().Unix())
+
+	if err := ctx.SaveUploadedFile(file, path); err != nil {
+		r.httpRespError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err = r.uc.Menu.SaveImage(ctx.Request.Context(), selectParam, path)
+	if err != nil {
+		os.Remove(path)
+		r.httpRespError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	r.httpRespSuccess(ctx, http.StatusOK, "successfully update menu's image", nil)
 }

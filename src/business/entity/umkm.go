@@ -12,6 +12,7 @@ type Umkm struct {
 	gorm.Model
 	Name             string
 	Slogan           string
+	ImgPath          string
 	Status           string
 	OwnerName        string
 	OwnerPhoneNumber string
@@ -34,6 +35,7 @@ type CreateUmkmParam struct {
 type UpdateUmkmParam struct {
 	Name             string `json:"name"`
 	Slogan           string `json:"slogan"`
+	ImgPath          string `json:"img_path"`
 	Status           string `json:"status"`
 	OwnerName        string `json:"owner_name"`
 	OwnerPhoneNumber string `json:"owner_phone_number"`

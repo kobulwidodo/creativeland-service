@@ -119,6 +119,8 @@ func (r *rest) Register() {
 		})
 	})
 
+	r.http.Static("/public/assets/umkm", "./public/assets/umkm")
+	r.http.Static("/public/assets/menu", "./public/assets/menu")
 	api := r.http.Group("/api")
 	v1 := api.Group("/v1")
 
@@ -139,6 +141,7 @@ func (r *rest) Register() {
 	umkm.GET("", r.VerifyUser, r.GetUmkmList)
 	umkm.PUT("/:umkm_id", r.VerifyUser, r.VerifyUmkm, r.UpdateUmkm)
 	umkm.DELETE("/:umkm_id", r.VerifyUser, r.VerifyUmkm, r.DeleteUmkm)
+	umkm.POST("/:umkm_id/upload-image", r.VerifyUser, r.VerifyUmkm, r.UploadImageUmkm)
 
 	// menu
 	menu := v1.Group("/menu")
@@ -147,6 +150,7 @@ func (r *rest) Register() {
 	menu.GET("", r.VerifyUser, r.GetMenuList)
 	menu.PUT("/:menu_id", r.VerifyUser, r.VerifyMenu, r.UpdateMenu)
 	menu.DELETE("/:menu_id", r.VerifyUser, r.VerifyMenu, r.DeleteMenu)
+	umkm.POST("/:umkm_id/menu/:menu_id/upload-image", r.VerifyUser, r.VerifyUmkm, r.UploadImageMenu)
 
 	cart := v1.Group("/cart")
 	cart.POST("/create", r.VerifyUser, r.AddMenuToCart)
